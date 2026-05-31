@@ -23,11 +23,17 @@ class DoryServiceBundle extends ServiceBundle
 
     public function services(Services $services, AppContext $context): void
     {
+        $services->singleton(AppContext::class)
+            ->factory(static fn(): AppContext => $context);
+
         $services->singleton(ValueRendererPipeline::class)
             ->factory(static fn(): ValueRendererPipeline => new ValueRendererPipeline([
                 new SettlementRenderer(),
                 new ThrowableRenderer(),
             ]));
+
+        $services->singleton(DoryScriptExecutor::class)
+            ->factory(static fn(): DoryScriptExecutor => new DoryScriptExecutor());
 
         $services->scoped(OutputSink::class)
             ->factory(static fn(): OutputSink => new EchoSink());

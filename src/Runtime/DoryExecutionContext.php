@@ -49,7 +49,7 @@ final class DoryExecutionContext implements ScriptContext
 
     public function attempt(Closure $task): AttemptBuilder
     {
-        return new AttemptBuilder($this, $task);
+        return new AttemptBuilder($this, $this->wrapClosure($task));
     }
 
     /** @return array<string|int, mixed> */
@@ -119,10 +119,27 @@ final class DoryExecutionContext implements ScriptContext
 
         return array_map(
             static fn(Scopeable|Executable|Closure $task): Scopeable|Executable|Closure => $task instanceof Closure
-                ? static fn(ExecutionScope $scope): mixed => $task(new self($scope, $scriptPath, $config))
+                ? self::wrapClosureFor($task, $scriptPath, $config)
                 : $task,
             $tasks,
         );
+    }
+
+    private function wrapClosure(Closure $task): Closure
+    {
+        return self::wrapClosureFor($task, $this->scriptPath, $this->config);
+    }
+
+    private static function wrapClosureFor(Closure $task, string $scriptPath, DoryConfig $config): Closure
+    {
+        return static function (ExecutionScope $scope) use ($task, $scriptPath, $config): mixed {
+            $context = new self($scope, $scriptPath, $config);
+
+            return ScriptContextHolder::run(
+                $context,
+                static fn(): mixed => $task($context),
+            );
+        };
     }
 
     private function resolveSink(): OutputSink

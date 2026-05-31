@@ -24,6 +24,7 @@
         "phalanx-php/themis": "^0.6",
         "phalanx-php/iris": "^0.6",
         "phalanx-php/grammata": "^0.6",
+        "phalanx-php/stoa": "^0.6",
         "phalanx-php/styx": "^0.6",
         "symfony/var-dumper": "^7.0"
     },

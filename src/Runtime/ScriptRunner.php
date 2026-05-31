@@ -8,13 +8,13 @@ final class ScriptRunner
 {
     public static function execute(ScriptContext $context): mixed
     {
-        ScriptContextHolder::set($context);
-        try {
-            return (static function (string $scriptPath): mixed {
-                return require $scriptPath;
-            })($context->scriptPath);
-        } finally {
-            ScriptContextHolder::clear();
-        }
+        return ScriptContextHolder::run(
+            $context,
+            static function () use ($context): mixed {
+                return (static function (string $scriptPath): mixed {
+                    return require $scriptPath;
+                })($context->scriptPath);
+            },
+        );
     }
 }

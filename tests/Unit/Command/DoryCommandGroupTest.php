@@ -48,15 +48,19 @@ final class DoryCommandGroupTest extends TestCase
     #[Test]
     public function registers_serve_when_skopos_available(): void
     {
-        if (!class_exists(\Phalanx\Skopos\FileWatcher::class)) {
-            self::markTestSkipped('Skopos not available in this environment.');
-        }
-
         $group = DoryCommandGroup::commands();
         $commands = $group->commands();
 
         self::assertArrayHasKey('serve', $commands);
         self::assertSame(ServeCommand::class, $commands['serve']->task);
+    }
+
+    #[Test]
+    public function does_not_register_stele_on_alpha_surface(): void
+    {
+        $group = DoryCommandGroup::commands();
+
+        self::assertNotContains('stele', $group->keys());
     }
 
     #[Test]
@@ -108,7 +112,12 @@ final class DoryCommandGroupTest extends TestCase
         $keys = $group->keys();
 
         self::assertContains('run', $keys);
+        self::assertContains('r', $keys);
         self::assertContains('init', $keys);
+        self::assertContains('new', $keys);
         self::assertContains('doctor', $keys);
+        self::assertContains('check', $keys);
+        self::assertContains('serve', $keys);
+        self::assertNotContains('stele', $keys);
     }
 }

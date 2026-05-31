@@ -7,6 +7,7 @@ namespace Phalanx\Dory\Tests\Unit\Runtime;
 use Phalanx\Dory\Orchestration\AttemptBuilder;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryExecutionContext;
+use Phalanx\Dory\Runtime\ScriptContextHolder;
 use Phalanx\Dory\Scoped\ScopedFiles;
 use Phalanx\Dory\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
@@ -135,5 +136,26 @@ final class DoryExecutionContextTest extends TestCase
         $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
 
         self::assertInstanceOf(ScopedFiles::class, $ctx->fs);
+    }
+
+    #[Test]
+    public function child_closure_installs_child_dory_context(): void
+    {
+        $childScope = $this->createStub(ExecutionScope::class);
+        $scope = $this->createMock(ExecutionScope::class);
+        $scope->expects(self::once())
+            ->method('concurrent')
+            ->willReturnCallback(static function (callable $task) use ($childScope): array {
+                return [$task($childScope)];
+            });
+
+        $config = new DoryConfig();
+        $ctx = new DoryExecutionContext($scope, '/tmp/test.php', $config);
+
+        ScriptContextHolder::run($ctx, static function () use ($ctx): void {
+            $result = $ctx->concurrent(static fn(): bool => dory() !== $ctx);
+
+            self::assertSame([true], $result);
+        });
     }
 }

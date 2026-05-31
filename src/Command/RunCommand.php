@@ -9,33 +9,22 @@ use Phalanx\Archon\Command\CommandConfig;
 use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Archon\Command\DescribesCommand;
 use Phalanx\Archon\Command\Opt;
-use Phalanx\Boot\AppContext;
-use Phalanx\Dory\Runtime\DoryBuilder;
+use Phalanx\Dory\Runtime\DoryConfig;
+use Phalanx\Dory\Runtime\DoryScriptExecutor;
 use Phalanx\Task\Scopeable;
 
 class RunCommand implements Scopeable, DescribesCommand
 {
+    public function __construct(private DoryScriptExecutor $scripts)
+    {
+    }
+
     public function __invoke(CommandContext $ctx): int
     {
         $input = (string) $ctx->args->required('script');
-        $scriptPath = self::resolveScript($input);
+        $scriptPath = self::resolveScript($input, $ctx);
 
-        $env = [];
-
-        if ($ctx->options->flag('verbose')) {
-            $env['DORY_VERBOSE'] = '1';
-        }
-
-        $timeout = $ctx->options->get('timeout');
-
-        if ($timeout !== null) {
-            $env['DORY_SCRIPT_TIMEOUT'] = $timeout;
-        }
-
-        $builder = new DoryBuilder(new AppContext(['env' => $env]));
-        $builder->script($scriptPath);
-
-        return $builder->run();
+        return $this->scripts->execute($ctx, $scriptPath, self::configFor($ctx));
     }
 
     public static function commandConfig(): CommandConfig
@@ -59,7 +48,7 @@ class RunCommand implements Scopeable, DescribesCommand
         );
     }
 
-    private static function resolveScript(string $input): string
+    private static function resolveScript(string $input, CommandContext $ctx): string
     {
         $resolved = realpath($input);
 
@@ -71,7 +60,7 @@ class RunCommand implements Scopeable, DescribesCommand
             throw new \RuntimeException("Script not found: {$input}");
         }
 
-        return self::writeInlineScript($input);
+        return self::writeInlineScript($input, $ctx);
     }
 
     private static function looksLikePath(string $input): bool
@@ -79,7 +68,7 @@ class RunCommand implements Scopeable, DescribesCommand
         return str_contains($input, '/') || str_contains($input, '\\') || str_ends_with($input, '.php');
     }
 
-    private static function writeInlineScript(string $code): string
+    private static function writeInlineScript(string $code, CommandContext $ctx): string
     {
         $code = trim($code);
         $isExpression = !str_contains($code, ';') && !str_contains($code, '{');
@@ -94,10 +83,33 @@ class RunCommand implements Scopeable, DescribesCommand
         }
 
         $php = "<?php declare(strict_types=1);\n{$body}\n";
-        $tmp = tempnam(sys_get_temp_dir(), 'dory_') . '.php';
-        file_put_contents($tmp, $php);
-        register_shutdown_function(static fn() => @unlink($tmp));
+        $tmp = tempnam(sys_get_temp_dir(), 'dory_');
+        if ($tmp === false) {
+            throw new \RuntimeException('Failed to create inline script file.');
+        }
 
-        return $tmp;
+        $path = "{$tmp}.php";
+        if (!rename($tmp, $path)) {
+            @unlink($tmp);
+            throw new \RuntimeException('Failed to prepare inline script file.');
+        }
+
+        file_put_contents($path, $php);
+        $ctx->onDispose(static fn() => @unlink($path));
+
+        return $path;
+    }
+
+    private static function configFor(CommandContext $ctx): DoryConfig
+    {
+        $base = $ctx->service(DoryConfig::class);
+        $timeout = $ctx->options->get('timeout');
+
+        return new DoryConfig(
+            scriptTimeout: $timeout === null ? $base->scriptTimeout : (float) $timeout,
+            maxConcurrency: $base->maxConcurrency,
+            verbose: $ctx->options->flag('verbose') || $base->verbose,
+            embedded: $base->embedded,
+        );
     }
 }

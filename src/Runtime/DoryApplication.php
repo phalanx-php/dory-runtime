@@ -6,8 +6,6 @@ namespace Phalanx\Dory\Runtime;
 
 use Phalanx\AppHost;
 use Phalanx\Cancellation\Cancelled;
-use Phalanx\Dory\Rendering\OutputSink;
-use Phalanx\Dory\Rendering\ValueRendererPipeline;
 use Throwable;
 
 class DoryApplication
@@ -36,29 +34,8 @@ class DoryApplication
             $scope = $this->host->createScope();
 
             try {
-                $config = $scope->service(DoryConfig::class);
-
-                $context = new DoryExecutionContext(
-                    inner: $scope,
-                    scriptPath: realpath($this->scriptPath) ?: $this->scriptPath,
-                    config: $config,
-                );
-
-                $result = $scope->timeout($config->scriptTimeout, static function () use ($context): mixed {
-                    return ScriptRunner::execute($context);
-                });
-
-                if (is_int($result)) {
-                    return $result;
-                }
-
-                if ($result !== null) {
-                    $pipeline = $scope->service(ValueRendererPipeline::class);
-                    $sink = $scope->service(OutputSink::class);
-                    $pipeline->render($result, $sink);
-                }
-
-                return 0;
+                return $scope->service(DoryScriptExecutor::class)
+                    ->execute($scope, $this->scriptPath);
             } catch (Cancelled $e) {
                 throw $e;
             } catch (Throwable $e) {
