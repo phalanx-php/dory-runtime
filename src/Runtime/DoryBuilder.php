@@ -20,37 +20,40 @@ class DoryBuilder
 
     public function __construct(AppContext $context = new AppContext())
     {
-        $this->app = Application::starting($context->values);
+        $projectConfig = DoryProjectConfig::discover(getcwd() ?: '.');
+
+        $merged = new AppContext([
+            ...$projectConfig->contextOverlay(),
+            ...$context->values,
+        ]);
+
+        $this->app = Application::starting($merged->values);
         $this->app->providers(new DoryServiceBundle());
-        
+
         $this->autoDetectModules();
     }
 
     public function providers(ServiceBundle ...$providers): self
     {
         $this->app->providers(...$providers);
-        
         return $this;
     }
 
     public function serviceMiddleware(ServiceTransformationMiddleware ...$middlewares): self
     {
         $this->app->serviceMiddleware(...$middlewares);
-        
         return $this;
     }
 
     public function taskMiddleware(TaskMiddleware ...$middlewares): self
     {
         $this->app->taskMiddleware(...$middlewares);
-        
         return $this;
     }
 
     public function script(string $path): self
     {
         $this->scriptPath = $path;
-        
         return $this;
     }
 

@@ -12,6 +12,7 @@ use Phalanx\Archon\Command\Opt;
 use Phalanx\Boot\AppContext;
 use Phalanx\Dory\Runtime\DoryConfig;
 use Phalanx\Dory\Runtime\DoryExecutionContext;
+use Phalanx\Dory\Runtime\DoryProjectConfig;
 use Phalanx\Dory\Runtime\DoryScriptRoute;
 use Phalanx\Dory\Runtime\DoryServeConfig;
 use Phalanx\Dory\Runtime\DoryServeServiceBundle;
@@ -34,9 +35,9 @@ class ServeCommand implements Scopeable, DescribesCommand
     {
         $scriptPath = self::resolveScript((string) $ctx->args->required('script'));
         $base = $ctx->service(DoryConfig::class);
-        $serverConfig = self::serverConfig($ctx, dirname($scriptPath));
+        $serverConfig = self::serverConfig($ctx);
 
-        $app = self::isStoaMode($ctx, dirname($scriptPath))
+        $app = self::isStoaMode($ctx, $scriptPath)
             ? self::loadStoaApplication($ctx, $scriptPath, $base, $serverConfig)
             : self::scriptApplication($ctx, $scriptPath, $base, $serverConfig);
 
@@ -69,7 +70,7 @@ class ServeCommand implements Scopeable, DescribesCommand
     {
         $resolved = realpath($scriptPath);
 
-        if ($resolved === false || !file_exists($resolved)) {
+        if ($resolved === false) {
             throw new RuntimeException("Script not found: {$scriptPath}");
         }
 
@@ -114,9 +115,9 @@ class ServeCommand implements Scopeable, DescribesCommand
         DoryConfig $doryConfig,
         StoaServerConfig $serverConfig,
     ): StoaApplication {
-        $context = self::appContext($ctx);
+        $context = $ctx->service(AppContext::class);
 
-        return Stoa::starting($context)
+        return Stoa::starting($context->values)
             ->providers(
                 new DoryServiceBundle(),
                 new HttpServiceBundle(),
@@ -131,80 +132,31 @@ class ServeCommand implements Scopeable, DescribesCommand
             ->build();
     }
 
-    private static function serverConfig(CommandContext $ctx, ?string $configRoot = null): StoaServerConfig
+    private static function serverConfig(CommandContext $ctx): StoaServerConfig
     {
-        $values = self::serveConfigValues($ctx, $configRoot ?? getcwd() ?: '.');
+        $values = $ctx->service(AppContext::class)->values;
+
         $listen = $ctx->options->get('listen');
 
         if (is_string($listen) && $listen !== '') {
             [$host, $port] = self::parseListen($listen);
-            $values['host'] = $host;
-            $values['port'] = $port;
+            $values['PHALANX_HOST'] = $host;
+            $values['PHALANX_PORT'] = $port;
         }
 
         $host = $ctx->options->get('host');
+
         if (is_string($host) && $host !== '') {
-            $values['host'] = $host;
+            $values['PHALANX_HOST'] = $host;
         }
 
         $port = $ctx->options->get('port');
+
         if ($port !== null && $port !== '') {
-            $values['port'] = (int) $port;
+            $values['PHALANX_PORT'] = (int) $port;
         }
 
         return StoaServerConfig::fromRuntimeOptions($values);
-    }
-
-    /** @return array<string, mixed> */
-    private static function serveConfigValues(CommandContext $ctx, string $configRoot): array
-    {
-        $context = $ctx->service(AppContext::class);
-        $values = self::envValues($context);
-
-        foreach (self::composerServeConfig($configRoot) as $key => $value) {
-            $values[$key] = $value;
-        }
-
-        return $values;
-    }
-
-    /** @return array<string, mixed> */
-    private static function envValues(AppContext $context): array
-    {
-        $env = $context->values['env'] ?? [];
-        $env = is_array($env) ? $env : [];
-
-        $values = [];
-
-        self::copyEnvValue($values, $env, 'APP_HOST', 'PHALANX_HOST');
-        self::copyEnvValue($values, $env, 'PHALANX_HOST', 'PHALANX_HOST');
-        self::copyEnvValue($values, $env, 'APP_PORT', 'PHALANX_PORT');
-        self::copyEnvValue($values, $env, 'PHALANX_PORT', 'PHALANX_PORT');
-
-        return $values;
-    }
-
-    /** @return array<string, mixed> */
-    private static function composerServeConfig(string $startDir): array
-    {
-        $dir = $startDir;
-
-        while (true) {
-            $path = $dir . '/composer.json';
-            if (is_file($path)) {
-                $json = json_decode((string) file_get_contents($path), true);
-                $serve = is_array($json) ? ($json['extra']['dory']['serve'] ?? []) : [];
-
-                return is_array($serve) ? $serve : [];
-            }
-
-            $parent = dirname($dir);
-            if ($parent === $dir) {
-                return [];
-            }
-
-            $dir = $parent;
-        }
     }
 
     /** @return array{string, int} */
@@ -226,35 +178,14 @@ class ServeCommand implements Scopeable, DescribesCommand
         return [$host, $port];
     }
 
-    private static function isStoaMode(CommandContext $ctx, string $configRoot): bool
+    private static function isStoaMode(CommandContext $ctx, string $scriptPath): bool
     {
         if ($ctx->options->flag('stoa')) {
             return true;
         }
 
-        $mode = self::composerServeConfig($configRoot)['mode'] ?? null;
+        $projectConfig = DoryProjectConfig::discover(dirname($scriptPath));
 
-        return $mode === 'stoa';
-    }
-
-    /**
-     * @param array<string, mixed> $values
-     * @param array<string, mixed> $env
-     */
-    private static function copyEnvValue(array &$values, array $env, string $source, string $target): void
-    {
-        if (!array_key_exists($source, $env) || $env[$source] === null || $env[$source] === '') {
-            return;
-        }
-
-        $values[$target] = $env[$source];
-    }
-
-    /** @return array<string, mixed> */
-    private static function appContext(CommandContext $ctx): array
-    {
-        $context = $ctx->service(AppContext::class);
-
-        return $context->values;
+        return ($projectConfig->section('serve')['mode'] ?? null) === 'stoa';
     }
 }

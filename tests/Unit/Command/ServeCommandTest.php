@@ -8,6 +8,7 @@ use Phalanx\Archon\Command\CommandContext;
 use Phalanx\Archon\Command\CommandOptions;
 use Phalanx\Boot\AppContext;
 use Phalanx\Dory\Command\ServeCommand;
+use Phalanx\Dory\Runtime\DoryProjectConfig;
 use Phalanx\Stoa\StoaServerConfig;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -25,11 +26,11 @@ final class ServeCommandTest extends TestCase
     }
 
     #[Test]
-    public function app_env_values_feed_stoa_server_config(): void
+    public function env_values_feed_stoa_server_config(): void
     {
         $config = self::serverConfig($this->scope(env: [
-            'APP_HOST' => '127.0.0.1',
-            'APP_PORT' => '9001',
+            'host' => '127.0.0.1',
+            'port' => '9001',
         ]));
 
         self::assertSame('127.0.0.1', $config->host);
@@ -37,12 +38,24 @@ final class ServeCommandTest extends TestCase
     }
 
     #[Test]
+    public function phalanx_env_values_feed_stoa_server_config(): void
+    {
+        $config = self::serverConfig($this->scope(env: [
+            'PHALANX_HOST' => '10.0.0.1',
+            'PHALANX_PORT' => '3000',
+        ]));
+
+        self::assertSame('10.0.0.1', $config->host);
+        self::assertSame(3000, $config->port);
+    }
+
+    #[Test]
     public function command_options_override_env_values(): void
     {
         $config = self::serverConfig($this->scope(
             env: [
-                'APP_HOST' => '127.0.0.1',
-                'APP_PORT' => '9001',
+                'PHALANX_HOST' => '127.0.0.1',
+                'PHALANX_PORT' => '9001',
             ],
             options: [
                 'host' => '0.0.0.0',
@@ -52,6 +65,45 @@ final class ServeCommandTest extends TestCase
 
         self::assertSame('0.0.0.0', $config->host);
         self::assertSame(9100, $config->port);
+    }
+
+    #[Test]
+    public function listen_option_sets_host_and_port(): void
+    {
+        $config = self::serverConfig($this->scope(
+            env: [],
+            options: ['listen' => '127.0.0.1:9000'],
+        ));
+
+        self::assertSame('127.0.0.1', $config->host);
+        self::assertSame(9000, $config->port);
+    }
+
+    #[Test]
+    public function explicit_host_port_override_listen(): void
+    {
+        $config = self::serverConfig($this->scope(
+            env: [],
+            options: [
+                'listen' => '127.0.0.1:9000',
+                'host' => '0.0.0.0',
+                'port' => '9100',
+            ],
+        ));
+
+        self::assertSame('0.0.0.0', $config->host);
+        self::assertSame(9100, $config->port);
+    }
+
+    #[Test]
+    public function invalid_listen_throws(): void
+    {
+        $this->expectException(\RuntimeException::class);
+
+        self::serverConfig($this->scope(
+            env: [],
+            options: ['listen' => 'no-colon'],
+        ));
     }
 
     #[Test]
@@ -70,10 +122,13 @@ final class ServeCommandTest extends TestCase
     private function scope(array $env, array $options = []): CommandContext
     {
         $scope = $this->createStub(CommandContext::class);
+
         $scope->method('$options::get')->willReturn(new CommandOptions($options));
+
         $scope->method('service')->willReturnCallback(
             static fn(string $type) => match ($type) {
-                AppContext::class => new AppContext(['env' => $env]),
+                AppContext::class => new AppContext($env),
+                DoryProjectConfig::class => new DoryProjectConfig([], null),
                 default => throw new \RuntimeException('Unexpected service: ' . $type),
             },
         );

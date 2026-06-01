@@ -23,8 +23,13 @@ class DoryServiceBundle extends ServiceBundle
 
     public function services(Services $services, AppContext $context): void
     {
+        $cwd = getcwd() ?: '.';
+
         $services->singleton(AppContext::class)
             ->factory(static fn(): AppContext => $context);
+
+        $services->singleton(DoryProjectConfig::class)
+            ->factory(static fn(): DoryProjectConfig => DoryProjectConfig::discover($cwd));
 
         $services->singleton(ValueRendererPipeline::class)
             ->factory(static fn(): ValueRendererPipeline => new ValueRendererPipeline([

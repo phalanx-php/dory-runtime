@@ -13,15 +13,18 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
     if (is_file($pharAutoload)) {
         require $pharAutoload;
 
-        // symfony/runtime is not embedded in the binary, so we construct the
-        // context array manually to match what AppContext expects from Archon::starting().
+        $projectConfig = \Phalanx\Dory\Runtime\DoryProjectConfig::discover(getcwd() ?: '.');
+
+        $env = array_filter(
+            $_ENV + $_SERVER,
+            static fn(string $key): bool => !str_starts_with($key, 'HTTP_'),
+            ARRAY_FILTER_USE_KEY,
+        );
+
         $context = [
+            ...$projectConfig->contextOverlay(),
+            ...$env,
             'argv' => $argv ?? $_SERVER['argv'] ?? [],
-            'env'  => array_filter(
-                $_ENV + $_SERVER,
-                static fn(string $key): bool => !str_starts_with($key, 'HTTP_'),
-                ARRAY_FILTER_USE_KEY,
-            ),
         ];
 
         $providers = [new \Phalanx\Dory\Runtime\DoryServiceBundle()];
@@ -40,7 +43,6 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
     }
 }
 
-// Development mode: Composer install with symfony/runtime present.
 $autoload = dirname(__DIR__) . '/vendor/autoload_runtime.php';
 
 if (!is_file($autoload)) {
@@ -60,9 +62,17 @@ require $autoload;
 
 use Phalanx\Archon\Application\Archon;
 use Phalanx\Dory\Command\DoryCommandGroup;
+use Phalanx\Dory\Runtime\DoryProjectConfig;
 use Phalanx\Dory\Runtime\DoryServiceBundle;
 
 return static fn(array $context): \Closure => static function () use ($context): int {
+    $projectConfig = DoryProjectConfig::discover(getcwd() ?: '.');
+
+    $context = [
+        ...$projectConfig->contextOverlay(),
+        ...$context,
+    ];
+
     $providers = [new DoryServiceBundle()];
 
     if (class_exists(\Phalanx\DoryBin\DoryBinServiceBundle::class)) {
