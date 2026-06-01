@@ -10,6 +10,7 @@ final class TokenRecord
         public string $kind,
         public string $text,
         public SpanRecord $span,
+        public ?string $file = null,
     ) {
     }
 
@@ -20,6 +21,7 @@ final class TokenRecord
             PayloadReader::string($data, 'kind'),
             PayloadReader::string($data, 'text'),
             SpanRecord::fromArray(PayloadReader::object($data, 'span')),
+            PayloadReader::nullableString($data, 'file'),
         );
     }
 }

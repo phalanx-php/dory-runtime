@@ -14,6 +14,7 @@ final class DeclarationRecord
         public string $fqn,
         public SpanRecord $span,
         public SpanRecord $nameSpan,
+        public ?string $file = null,
     ) {
     }
 
@@ -28,6 +29,7 @@ final class DeclarationRecord
             PayloadReader::string($data, 'fqn'),
             SpanRecord::fromArray(PayloadReader::object($data, 'span')),
             SpanRecord::fromArray(PayloadReader::object($data, 'name_span')),
+            PayloadReader::nullableString($data, 'file'),
         );
     }
 }

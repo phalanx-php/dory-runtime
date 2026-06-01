@@ -10,48 +10,75 @@ use RuntimeException;
 
 class NativeCodeParser implements CodeParser
 {
-    /**
-     * @param (Closure(string, ?string=): string)|null $parseSource
-     * @param (Closure(string): string)|null $parseFile
-     */
-    public function __construct(
-        private ?Closure $parseSource = null,
-        private ?Closure $parseFile = null,
-    ) {
+    /** @param (Closure(array<string, mixed>): string)|null $dispatch */
+    public function __construct(private ?Closure $dispatch = null)
+    {
     }
 
     public function parseSource(string $source, ?string $name = null): ParseResult
     {
-        $call = $this->parseSource ?? self::nativeSourceParser();
+        $request = [
+            'op' => 'parse_source',
+            'source' => $source,
+        ];
 
-        return ParseResult::fromArray(self::payload($call($source, $name)));
+        if ($name !== null) {
+            $request['name'] = $name;
+        }
+
+        return ParseResult::fromArray($this->payloadFor($request));
     }
 
     public function parseFile(string $path): ParseResult
     {
-        $call = $this->parseFile ?? self::nativeFileParser();
-
-        return ParseResult::fromArray(self::payload($call($path)));
+        return ParseResult::fromArray($this->payloadFor([
+            'op' => 'parse_file',
+            'path' => $path,
+        ]));
     }
 
-    /** @return Closure(string, ?string=): string */
-    private static function nativeSourceParser(): Closure
+    public function indexProject(string $root): CodeProjectIndex
     {
-        if (!function_exists('dory_code_parse_json')) {
+        return CodeProjectIndex::fromArray($this->payloadFor([
+            'op' => 'index_project',
+            'root' => $root,
+        ]));
+    }
+
+    public function queryDeclarations(string $root, ?DeclarationQuery $query = null): DeclarationQueryResult
+    {
+        return DeclarationQueryResult::fromArray($this->payloadFor([
+            'op' => 'query_declarations',
+            'root' => $root,
+            'query' => ($query ?? new DeclarationQuery())->toArray(),
+        ]));
+    }
+
+    public function queryTokens(string $root, ?TokenQuery $query = null): TokenQueryResult
+    {
+        return TokenQueryResult::fromArray($this->payloadFor([
+            'op' => 'query_tokens',
+            'root' => $root,
+            'query' => ($query ?? new TokenQuery())->toArray(),
+        ]));
+    }
+
+    /** @param array<string, mixed> $request */
+    private function payloadFor(array $request): array
+    {
+        $dispatch = $this->dispatch ?? self::nativeQueryDispatcher();
+
+        return self::payload($dispatch($request));
+    }
+
+    /** @return Closure(array<string, mixed>): string */
+    private static function nativeQueryDispatcher(): Closure
+    {
+        if (!function_exists('dory_code_query_json')) {
             throw new RuntimeException('Dory code parser is not available in this runtime.');
         }
 
-        return static fn(string $source, ?string $name = null): string => dory_code_parse_json($source, $name);
-    }
-
-    /** @return Closure(string): string */
-    private static function nativeFileParser(): Closure
-    {
-        if (!function_exists('dory_code_parse_file_json')) {
-            throw new RuntimeException('Dory code parser is not available in this runtime.');
-        }
-
-        return static fn(string $path): string => dory_code_parse_file_json($path);
+        return static fn (array $request): string => dory_code_query_json(json_encode($request, JSON_THROW_ON_ERROR));
     }
 
     /** @return array<string, mixed> */

@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Phalanx\Dory\Tests\Unit\Scoped;
 
 use Phalanx\Dory\Code\DeclarationIndex;
+use Phalanx\Dory\Code\DeclarationQuery;
 use Phalanx\Dory\Code\CodeParser;
 use Phalanx\Dory\Code\InvalidCodePayload;
 use Phalanx\Dory\Code\NativeCodeParser;
 use Phalanx\Dory\Code\ParseResult;
 use Phalanx\Dory\Code\TokenIndex;
+use Phalanx\Dory\Code\TokenQuery;
 use Phalanx\Dory\Scoped\ScopedCode;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
@@ -23,7 +25,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseSource: static fn(string $source, ?string $name = null): string => self::payloadJson($name ?? 'inline.php'),
+                dispatch: static fn (array $request): string => self::dispatchJson($request),
             ),
         );
 
@@ -43,7 +45,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseFile: static fn(string $path): string => self::payloadJson($path),
+                dispatch: static fn (array $request): string => self::dispatchJson($request),
             ),
         );
 
@@ -57,7 +59,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseFile: static fn(string $path): string => self::payloadJson($path),
+                dispatch: static fn (array $request): string => self::dispatchJson($request),
             ),
         );
 
@@ -72,7 +74,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseSource: static fn(string $source, ?string $name = null): string => self::payloadJson($name ?? 'inline.php'),
+                dispatch: static fn (array $request): string => self::dispatchJson($request),
             ),
         );
 
@@ -80,6 +82,66 @@ final class ScopedCodeTest extends TestCase
 
         self::assertInstanceOf(TokenIndex::class, $index);
         self::assertSame('T_OPEN_TAG', $index->items[0]->kind);
+    }
+
+    #[Test]
+    public function index_project_hydrates_project_summary(): void
+    {
+        $code = new ScopedCode(
+            parser: new NativeCodeParser(
+                dispatch: static fn (array $request): string => self::dispatchJson($request),
+            ),
+        );
+
+        $index = $code->indexProject('/tmp/project');
+
+        self::assertSame('/tmp/project', $index->root);
+        self::assertSame(1, $index->fileCount);
+        self::assertSame(1, $index->declarationCount);
+        self::assertSame(1, $index->tokenCount);
+        self::assertSame('src/Example.php', $index->files[0]->name);
+    }
+
+    #[Test]
+    public function declarations_queries_are_typed_and_filterable(): void
+    {
+        $code = new ScopedCode(
+            parser: new NativeCodeParser(
+                dispatch: static function (array $request): string {
+                    self::assertSame('query_declarations', $request['op']);
+                    self::assertSame(['kind' => 'class', 'name' => 'Example'], $request['query']);
+
+                    return self::dispatchJson($request);
+                },
+            ),
+        );
+
+        $result = $code->declarations('/tmp/project', new DeclarationQuery(kind: 'class', name: 'Example'));
+
+        self::assertSame('/tmp/project', $result->root);
+        self::assertSame('src/Example.php', $result->declarations[0]->file);
+        self::assertSame('Example', $result->declarations[0]->name);
+    }
+
+    #[Test]
+    public function token_queries_are_typed_and_filterable(): void
+    {
+        $code = new ScopedCode(
+            parser: new NativeCodeParser(
+                dispatch: static function (array $request): string {
+                    self::assertSame('query_tokens', $request['op']);
+                    self::assertSame(['kind' => 'T_CLASS'], $request['query']);
+
+                    return self::dispatchJson($request);
+                },
+            ),
+        );
+
+        $result = $code->tokens('/tmp/project', new TokenQuery(kind: 'T_CLASS'));
+
+        self::assertSame('/tmp/project', $result->root);
+        self::assertSame('src/Example.php', $result->tokens[0]->file);
+        self::assertSame('T_OPEN_TAG', $result->tokens[0]->kind);
     }
 
     #[Test]
@@ -109,7 +171,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseSource: static fn(): string => json_encode([
+                dispatch: static fn (): string => json_encode([
                     'ok' => false,
                     'message' => 'parser unavailable',
                 ], JSON_THROW_ON_ERROR),
@@ -127,7 +189,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseSource: static fn(): string => '{',
+                dispatch: static fn (): string => '{',
             ),
         );
 
@@ -141,7 +203,7 @@ final class ScopedCodeTest extends TestCase
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
-                parseSource: static fn(): string => json_encode([
+                dispatch: static fn (): string => json_encode([
                     'ok' => true,
                     'has_errors' => false,
                     'errors' => [],
@@ -159,6 +221,67 @@ final class ScopedCodeTest extends TestCase
     private static function payloadJson(string $name): string
     {
         return json_encode(self::payload($name), JSON_THROW_ON_ERROR);
+    }
+
+    /** @param array<string, mixed> $request */
+    private static function dispatchJson(array $request): string
+    {
+        return match ($request['op']) {
+            'parse_source' => self::payloadJson(($request['name'] ?? null) ?: 'inline.php'),
+            'parse_file' => self::payloadJson($request['path']),
+            'index_project' => json_encode(self::projectPayload($request['root']), JSON_THROW_ON_ERROR),
+            'query_declarations' => json_encode(self::declarationQueryPayload($request['root']), JSON_THROW_ON_ERROR),
+            'query_tokens' => json_encode(self::tokenQueryPayload($request['root']), JSON_THROW_ON_ERROR),
+            default => json_encode(['ok' => false, 'message' => 'unknown query'], JSON_THROW_ON_ERROR),
+        };
+    }
+
+    /** @return array<string, mixed> */
+    private static function projectPayload(string $root): array
+    {
+        return [
+            'ok' => true,
+            'root' => $root,
+            'files' => [[
+                'id' => '1',
+                'name' => 'src/Example.php',
+                'wrapped' => false,
+            ]],
+            'file_count' => 1,
+            'declaration_count' => 1,
+            'token_count' => 1,
+            'errors' => [],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private static function declarationQueryPayload(string $root): array
+    {
+        $payload = self::payload('src/Example.php');
+        $declaration = $payload['declarations'][0];
+        $declaration['file'] = 'src/Example.php';
+
+        return [
+            'ok' => true,
+            'root' => $root,
+            'declarations' => [$declaration],
+            'errors' => [],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private static function tokenQueryPayload(string $root): array
+    {
+        $payload = self::payload('src/Example.php');
+        $token = $payload['tokens'][0];
+        $token['file'] = 'src/Example.php';
+
+        return [
+            'ok' => true,
+            'root' => $root,
+            'tokens' => [$token],
+            'errors' => [],
+        ];
     }
 
     /** @return array<string, mixed> */
