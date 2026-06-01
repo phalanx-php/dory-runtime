@@ -10,11 +10,11 @@ final class InvalidCodePayload extends RuntimeException
 {
     public static function field(string $field, string $expected): self
     {
-        return new self("Dory Mago parser returned invalid `{$field}`; expected {$expected}.");
+        return new self("Dory code parser returned invalid `{$field}`; expected {$expected}.");
     }
 
     public static function json(): self
     {
-        return new self('Dory Mago parser returned invalid JSON.');
+        return new self('Dory code parser returned invalid JSON.');
     }
 }

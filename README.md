@@ -32,7 +32,7 @@ dory()->dump($result);
 
 | Method / Property | Purpose |
 |---|---|
-| `dory()->println($msg)` | Write a line to the script's output sink |
+| `dory()->println($message)` | Write a line to the script's output sink |
 | `dory()->dump(...$values)` | Render values through the configured pipeline |
 | `dory()->attempt($task)` | Build a retry/timeout chain via `AttemptBuilder` |
 | `dory()->http` | Lazy-resolved HTTP client (requires `phalanx-iris`) |
@@ -62,6 +62,25 @@ Dory registers commands under the `dory` binary:
 | `dory run <script>` | Execute a Dory script |
 | `dory init [dir]` | Scaffold a new Dory project with a sample script |
 | `dory doctor` | Check environment readiness |
+
+For one-line command input, prefer expressions and direct `dory()` calls:
+
+```sh
+dory -r 'dory()->dump(1 + 1)'
+dory -r 'dory()->println("done")'
+dory -r 'a = 3; dory()->dump(a * 3)'
+dory -r 'aa = 10; dory()->dump(aa / 2)'
+```
+
+Do not write PHP `$` variables in one-line command strings. Dory intentionally supports one- and two-character bare-variable shorthand for throwaway CLI work. Use a script file or a heredoc when the code needs normal PHP variables or longer variable names:
+
+```sh
+dory -r "$(cat <<'PHP'
+$parseResult = dory()->code->parse('final class Example {}', 'example.php');
+dory()->dump($parseResult->declarations[0]->fqn);
+PHP
+)"
+```
 
 Two additional command groups are conditionally available:
 

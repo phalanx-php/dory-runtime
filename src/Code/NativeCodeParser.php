@@ -37,21 +37,21 @@ class NativeCodeParser implements CodeParser
     /** @return Closure(string, ?string=): string */
     private static function nativeSourceParser(): Closure
     {
-        if (!function_exists('dory_mago_parse_json')) {
-            throw new RuntimeException('Dory Mago parser is not available in this runtime.');
+        if (!function_exists('dory_code_parse_json')) {
+            throw new RuntimeException('Dory code parser is not available in this runtime.');
         }
 
-        return static fn(string $source, ?string $name = null): string => dory_mago_parse_json($source, $name);
+        return static fn(string $source, ?string $name = null): string => dory_code_parse_json($source, $name);
     }
 
     /** @return Closure(string): string */
     private static function nativeFileParser(): Closure
     {
-        if (!function_exists('dory_mago_parse_file_json')) {
-            throw new RuntimeException('Dory Mago parser is not available in this runtime.');
+        if (!function_exists('dory_code_parse_file_json')) {
+            throw new RuntimeException('Dory code parser is not available in this runtime.');
         }
 
-        return static fn(string $path): string => dory_mago_parse_file_json($path);
+        return static fn(string $path): string => dory_code_parse_file_json($path);
     }
 
     /** @return array<string, mixed> */
@@ -70,7 +70,7 @@ class NativeCodeParser implements CodeParser
         if (PayloadReader::bool($payload, 'ok') !== true) {
             $message = $payload['message'] ?? null;
 
-            throw new RuntimeException(is_string($message) ? $message : 'Dory Mago parser failed.');
+            throw new RuntimeException(is_string($message) ? $message : 'Dory code parser failed.');
         }
 
         return $payload;

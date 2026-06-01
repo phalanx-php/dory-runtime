@@ -19,7 +19,7 @@ use RuntimeException;
 final class ScopedCodeTest extends TestCase
 {
     #[Test]
-    public function parse_hydrates_mago_payload(): void
+    public function parse_hydrates_code_payload(): void
     {
         $code = new ScopedCode(
             parser: new NativeCodeParser(
@@ -167,7 +167,7 @@ final class ScopedCodeTest extends TestCase
         return [
             'ok' => true,
             'file' => [
-                'id' => 1,
+                'id' => '1',
                 'name' => $name,
                 'wrapped' => false,
             ],

@@ -7,7 +7,7 @@ namespace Phalanx\Dory\Code;
 final class SourceFileRecord
 {
     public function __construct(
-        public int $id,
+        public string $id,
         public string $name,
         public bool $wrapped,
     ) {
@@ -17,7 +17,7 @@ final class SourceFileRecord
     public static function fromArray(array $data): self
     {
         return new self(
-            PayloadReader::int($data, 'id'),
+            PayloadReader::string($data, 'id'),
             PayloadReader::string($data, 'name'),
             PayloadReader::bool($data, 'wrapped'),
         );
