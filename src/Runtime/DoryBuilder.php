@@ -6,8 +6,10 @@ namespace Phalanx\Dory\Runtime;
 
 use Phalanx\Application;
 use Phalanx\ApplicationBuilder;
+use Phalanx\Argos\NetworkServiceBundle;
 use Phalanx\Boot\AppContext;
 use Phalanx\Grammata\FilesystemServiceBundle;
+use Phalanx\Hermes\WsServiceBundle;
 use Phalanx\Iris\HttpServiceBundle;
 use Phalanx\Middleware\ServiceTransformationMiddleware;
 use Phalanx\Middleware\TaskMiddleware;
@@ -80,6 +82,14 @@ class DoryBuilder
 
         if (class_exists(FilesystemServiceBundle::class)) {
             $this->app->providers(new FilesystemServiceBundle());
+        }
+
+        if (class_exists(NetworkServiceBundle::class)) {
+            $this->app->providers(new NetworkServiceBundle());
+        }
+
+        if (class_exists(WsServiceBundle::class)) {
+            $this->app->providers(new WsServiceBundle());
         }
     }
 }
