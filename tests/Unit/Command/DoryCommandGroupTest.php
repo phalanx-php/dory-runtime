@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Phalanx\Dory\Tests\Unit\Command;
 
 use Phalanx\Archon\Command\CommandConfig;
+use Phalanx\Dory\Command\CodeCheckCommand;
+use Phalanx\Dory\Command\CodeDeclarationsCommand;
+use Phalanx\Dory\Command\CodeTokensCommand;
 use Phalanx\Dory\Command\DoctorCommand;
 use Phalanx\Dory\Command\DoryCommandGroup;
 use Phalanx\Dory\Command\InitCommand;
@@ -53,6 +56,23 @@ final class DoryCommandGroupTest extends TestCase
 
         self::assertArrayHasKey('serve', $commands);
         self::assertSame(ServeCommand::class, $commands['serve']->task);
+    }
+
+    #[Test]
+    public function registers_code_command_group(): void
+    {
+        $group = DoryCommandGroup::commands();
+        $code = $group->group('code');
+
+        self::assertNotNull($code);
+
+        $commands = $code->commands();
+        self::assertArrayHasKey('check', $commands);
+        self::assertArrayHasKey('declarations', $commands);
+        self::assertArrayHasKey('tokens', $commands);
+        self::assertSame(CodeCheckCommand::class, $commands['check']->task);
+        self::assertSame(CodeDeclarationsCommand::class, $commands['declarations']->task);
+        self::assertSame(CodeTokensCommand::class, $commands['tokens']->task);
     }
 
     #[Test]
@@ -106,6 +126,16 @@ final class DoryCommandGroupTest extends TestCase
     }
 
     #[Test]
+    public function top_level_check_remains_doctor_alias(): void
+    {
+        $group = DoryCommandGroup::commands();
+        $commands = $group->commands();
+
+        self::assertArrayHasKey('check', $commands);
+        self::assertSame(DoctorCommand::class, $commands['check']->task);
+    }
+
+    #[Test]
     public function all_core_commands_present_in_keys(): void
     {
         $group = DoryCommandGroup::commands();
@@ -117,6 +147,7 @@ final class DoryCommandGroupTest extends TestCase
         self::assertContains('new', $keys);
         self::assertContains('doctor', $keys);
         self::assertContains('check', $keys);
+        self::assertContains('code', $keys);
         self::assertContains('serve', $keys);
         self::assertNotContains('stele', $keys);
     }

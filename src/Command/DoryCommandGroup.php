@@ -17,6 +17,7 @@ class DoryCommandGroup
             'new' => InitCommand::class,
             'doctor' => DoctorCommand::class,
             'check' => DoctorCommand::class,
+            'code' => CodeCommandGroup::commands(),
             'serve' => ServeCommand::class,
         ];
 
