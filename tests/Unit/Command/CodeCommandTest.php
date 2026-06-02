@@ -125,6 +125,33 @@ final class CodeCommandTest extends TestCase
     }
 
     #[Test]
+    public function tokens_command_hydrates_real_argv_options(): void
+    {
+        $result = new TokenQueryResult('app', [self::token()], []);
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::once())
+            ->method('queryTokens')
+            ->with(self::equalTo('app'), self::callback(
+                static fn (TokenQuery $query): bool => $query->kind === 'Variable'
+                    && $query->text === null
+                    && $query->file === 'src/Example.php',
+            ))
+            ->willReturn($result);
+
+        [$ctx, $stream] = $this->argvContext(
+            CodeTokensCommand::commandConfig(),
+            ['app', '--kind=Variable', '--file=src/Example.php'],
+        );
+        $exit = (new CodeTokensCommand($parser))($ctx);
+
+        rewind($stream);
+        $output = stream_get_contents($stream);
+
+        self::assertSame(0, $exit);
+        self::assertStringContainsString('Class "class" src/Example.php:3', $output);
+    }
+
+    #[Test]
     public function tokens_command_requires_filter_or_all_flag(): void
     {
         $parser = $this->createMock(CodeParser::class);
@@ -138,6 +165,26 @@ final class CodeCommandTest extends TestCase
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('Provide --kind, --text, --file, or --all', $output);
+    }
+
+    #[Test]
+    public function tokens_command_json_validation_failure_is_machine_readable(): void
+    {
+        $parser = $this->createMock(CodeParser::class);
+        $parser->expects(self::never())->method('queryTokens');
+
+        [$ctx, $stream] = $this->context(['root' => 'app'], ['json' => true]);
+        $exit = (new CodeTokensCommand($parser))($ctx);
+
+        rewind($stream);
+        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+
+        self::assertSame(1, $exit);
+        self::assertFalse($payload['ok']);
+        self::assertSame(
+            'Provide --kind, --text, --file, or --all before listing project tokens.',
+            $payload['message'],
+        );
     }
 
     #[Test]
@@ -191,6 +238,36 @@ final class CodeCommandTest extends TestCase
                 new CommandOptions($options),
                 new CommandConfig(),
                 'test-code-command',
+            ),
+            $stream,
+        ];
+    }
+
+    /**
+     * @param list<string> $rawArgs
+     * @return array{CommandContext, resource}
+     */
+    private function argvContext(CommandConfig $config, array $rawArgs): array
+    {
+        $stream = fopen('php://memory', 'rw');
+        self::assertIsResource($stream);
+
+        $output = new StreamOutput($stream, new TerminalEnvironment(isTty: false));
+        $inner = $this->createStub(ExecutionScope::class);
+        $inner->method('service')->willReturnCallback(
+            static fn (string $type) => match ($type) {
+                StreamOutput::class => $output,
+                default => throw new \RuntimeException('Unexpected service: ' . $type),
+            },
+        );
+
+        return [
+            ExecutionContext::fromInput(
+                $inner,
+                'tokens',
+                $config,
+                $rawArgs,
+                'test-code-command-argv',
             ),
             $stream,
         ];

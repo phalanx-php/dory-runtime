@@ -55,6 +55,14 @@ final class CodeCommandOutput
         $output->persist(json_encode($payload, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR));
     }
 
+    public static function jsonError(StreamOutput $output, string $message): void
+    {
+        self::json($output, [
+            'ok' => false,
+            'message' => $message,
+        ]);
+    }
+
     /** @return array<string, mixed> */
     private static function sourceFile(SourceFileRecord $file): array
     {

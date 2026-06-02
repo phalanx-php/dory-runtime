@@ -27,7 +27,15 @@ class CodeTokensCommand implements Scopeable, DescribesCommand
         $output = $ctx->service(StreamOutput::class);
 
         if (!$ctx->options->flag('all') && !CodeCommandInput::hasAnyOption($ctx, 'kind', 'text', 'file')) {
-            $output->persist('Provide --kind, --text, --file, or --all before listing project tokens.');
+            $message = 'Provide --kind, --text, --file, or --all before listing project tokens.';
+
+            if ($ctx->options->flag('json')) {
+                CodeCommandOutput::jsonError($output, $message);
+
+                return 1;
+            }
+
+            $output->persist($message);
 
             return 1;
         }
