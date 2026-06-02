@@ -170,7 +170,14 @@ final class ScopedCodeTest extends TestCase
 
     private static function parseResult(string $name): ParseResult
     {
-        $span = new SpanRecord(0, 5, 1, 1, 1, 6);
+        $span = new SpanRecord(
+            0,
+            5,
+            1,
+            1,
+            1,
+            6,
+        );
 
         return ParseResult::fromArray([
             'file' => [
@@ -231,6 +238,7 @@ final class ScopedCodeTest extends TestCase
             'references' => [[
                 'kind' => 'function',
                 'name' => 'helper',
+                'receiver' => null,
                 'span' => [
                     'start_offset' => $span->startOffset,
                     'end_offset' => $span->endOffset,

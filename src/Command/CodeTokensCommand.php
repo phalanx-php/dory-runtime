@@ -17,8 +17,9 @@ use Phalanx\Task\Scopeable;
 
 class CodeTokensCommand implements Scopeable, DescribesCommand
 {
-    public function __construct(private CodeParser $parser)
-    {
+    public function __construct(
+        private CodeParser $parser,
+    ) {
     }
 
     public function __invoke(CommandContext $ctx): int
@@ -26,7 +27,10 @@ class CodeTokensCommand implements Scopeable, DescribesCommand
         $root = (string) $ctx->args->get('root', '.');
         $output = $ctx->service(StreamOutput::class);
 
-        if (!$ctx->options->flag('all') && !CodeCommandInput::hasAnyOption($ctx, 'kind', 'text', 'file')) {
+        if (
+            !$ctx->options->flag('all')
+            && !CodeCommandInput::hasAnyOption($ctx, 'kind', 'text', 'file')
+        ) {
             $message = 'Provide --kind, --text, --file, or --all before listing project tokens.';
 
             if ($ctx->options->flag('json')) {
@@ -45,6 +49,7 @@ class CodeTokensCommand implements Scopeable, DescribesCommand
             text: CodeCommandInput::nullableOption($ctx, 'text'),
             file: CodeCommandInput::nullableOption($ctx, 'file'),
         );
+
         $result = $this->parser->queryTokens($root, $query);
 
         if ($ctx->options->flag('json')) {

@@ -79,6 +79,7 @@ final class CodePayload
         return [
             'kind' => $reference->kind,
             'name' => $reference->name,
+            'receiver' => $reference->receiver,
             'span' => self::span($reference->span),
             'context' => $reference->context,
             'file' => $reference->file,

@@ -15,8 +15,9 @@ use Phalanx\Task\Scopeable;
 
 class CodeCheckCommand implements Scopeable, DescribesCommand
 {
-    public function __construct(private CodeParser $parser)
-    {
+    public function __construct(
+        private CodeParser $parser,
+    ) {
     }
 
     public function __invoke(CommandContext $ctx): int
@@ -62,5 +63,4 @@ class CodeCheckCommand implements Scopeable, DescribesCommand
             ],
         );
     }
-
 }

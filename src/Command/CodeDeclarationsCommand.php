@@ -17,8 +17,9 @@ use Phalanx\Task\Scopeable;
 
 class CodeDeclarationsCommand implements Scopeable, DescribesCommand
 {
-    public function __construct(private CodeParser $parser)
-    {
+    public function __construct(
+        private CodeParser $parser,
+    ) {
     }
 
     public function __invoke(CommandContext $ctx): int
@@ -30,6 +31,7 @@ class CodeDeclarationsCommand implements Scopeable, DescribesCommand
             fqn: CodeCommandInput::nullableOption($ctx, 'fqn'),
             file: CodeCommandInput::nullableOption($ctx, 'file'),
         );
+
         $result = $this->parser->queryDeclarations($root, $query);
         $output = $ctx->service(StreamOutput::class);
 

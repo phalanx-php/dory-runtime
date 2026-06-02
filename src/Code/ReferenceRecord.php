@@ -9,6 +9,7 @@ final class ReferenceRecord
     public function __construct(
         public string $kind,
         public string $name,
+        public ?string $receiver,
         public SpanRecord $span,
         public ?string $context,
         public ?string $file = null,
@@ -21,6 +22,7 @@ final class ReferenceRecord
         return new self(
             PayloadReader::string($data, 'kind'),
             PayloadReader::string($data, 'name'),
+            PayloadReader::nullableString($data, 'receiver'),
             SpanRecord::fromArray(PayloadReader::object($data, 'span')),
             PayloadReader::nullableString($data, 'context'),
             PayloadReader::nullableString($data, 'file'),

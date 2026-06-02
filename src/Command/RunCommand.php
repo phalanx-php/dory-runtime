@@ -15,8 +15,9 @@ use Phalanx\Task\Scopeable;
 
 class RunCommand implements Scopeable, DescribesCommand
 {
-    public function __construct(private DoryScriptExecutor $scripts)
-    {
+    public function __construct(
+        private DoryScriptExecutor $scripts,
+    ) {
     }
 
     public function __invoke(CommandContext $ctx): int
@@ -95,7 +96,9 @@ class RunCommand implements Scopeable, DescribesCommand
         }
 
         file_put_contents($path, $php);
-        $ctx->onDispose(static fn() => @unlink($path));
+        $ctx->onDispose(static function () use ($path): void {
+            @unlink($path);
+        });
 
         return $path;
     }

@@ -198,21 +198,28 @@ final class CodeCommandTest extends TestCase
         $parser->expects(self::once())
             ->method('queryReferences')
             ->with(self::equalTo('app'), self::callback(
-                static fn (ReferenceQuery $query): bool => $query->kind === 'function'
-                    && $query->name === 'helper'
+                static fn (ReferenceQuery $query): bool => $query->kind === 'method'
+                    && $query->name === 'name'
+                    && $query->receiver === '$this'
                     && $query->file === null
                     && $query->context === null,
             ))
             ->willReturn($result);
 
-        [$ctx, $stream] = $this->context(['root' => 'app'], ['kind' => 'function', 'name' => 'helper']);
+        [$ctx, $stream] = $this->context(
+            ['root' => 'app'],
+            ['kind' => 'method', 'name' => 'name', 'receiver' => '$this'],
+        );
         $exit = (new CodeReferencesCommand($parser))($ctx);
 
         rewind($stream);
         $output = stream_get_contents($stream);
 
         self::assertSame(0, $exit);
-        self::assertStringContainsString('function helper App\\Example::run src/Example.php:3', $output);
+        self::assertStringContainsString(
+            'method name $this App\\Example::run src/Example.php:3',
+            $output,
+        );
     }
 
     #[Test]
@@ -244,7 +251,7 @@ final class CodeCommandTest extends TestCase
         $output = stream_get_contents($stream);
 
         self::assertSame(1, $exit);
-        self::assertStringContainsString('Provide --kind, --name, --file, --context, or --all', $output);
+        self::assertStringContainsString('Provide --kind, --name, --receiver, --file, --context, or --all', $output);
     }
 
     #[Test]
@@ -400,21 +407,46 @@ final class CodeCommandTest extends TestCase
 
     private static function token(): TokenRecord
     {
-        return new TokenRecord('Class', 'class', self::span(line: 3), 'src/Example.php');
+        return new TokenRecord(
+            'Class',
+            'class',
+            self::span(line: 3),
+            'src/Example.php',
+        );
     }
 
     private static function node(): CodeNodeRecord
     {
-        return new CodeNodeRecord('method', 'run', self::span(line: 3), 'App\\Example', 'src/Example.php');
+        return new CodeNodeRecord(
+            'method',
+            'run',
+            self::span(line: 3),
+            'App\\Example',
+            'src/Example.php',
+        );
     }
 
     private static function reference(): ReferenceRecord
     {
-        return new ReferenceRecord('function', 'helper', self::span(line: 3), 'App\\Example::run', 'src/Example.php');
+        return new ReferenceRecord(
+            'method',
+            'name',
+            '$this',
+            self::span(line: 3),
+            'App\\Example::run',
+            'src/Example.php',
+        );
     }
 
     private static function span(int $line = 1): SpanRecord
     {
-        return new SpanRecord(0, 5, $line, 1, $line, 6);
+        return new SpanRecord(
+            0,
+            5,
+            $line,
+            1,
+            $line,
+            6,
+        );
     }
 }

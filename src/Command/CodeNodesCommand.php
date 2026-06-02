@@ -17,8 +17,9 @@ use Phalanx\Task\Scopeable;
 
 class CodeNodesCommand implements Scopeable, DescribesCommand
 {
-    public function __construct(private CodeParser $parser)
-    {
+    public function __construct(
+        private CodeParser $parser,
+    ) {
     }
 
     public function __invoke(CommandContext $ctx): int
@@ -26,7 +27,16 @@ class CodeNodesCommand implements Scopeable, DescribesCommand
         $root = (string) $ctx->args->get('root', '.');
         $output = $ctx->service(StreamOutput::class);
 
-        if (!$ctx->options->flag('all') && !CodeCommandInput::hasAnyOption($ctx, 'kind', 'name', 'file', 'context')) {
+        if (
+            !$ctx->options->flag('all')
+            && !CodeCommandInput::hasAnyOption(
+                $ctx,
+                'kind',
+                'name',
+                'file',
+                'context',
+            )
+        ) {
             $message = 'Provide --kind, --name, --file, --context, or --all before listing project nodes.';
 
             if ($ctx->options->flag('json')) {
@@ -46,6 +56,7 @@ class CodeNodesCommand implements Scopeable, DescribesCommand
             file: CodeCommandInput::nullableOption($ctx, 'file'),
             context: CodeCommandInput::nullableOption($ctx, 'context'),
         );
+
         $result = $this->parser->queryNodes($root, $query);
 
         if ($ctx->options->flag('json')) {

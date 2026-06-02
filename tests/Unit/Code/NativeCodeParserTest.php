@@ -160,18 +160,30 @@ final class NativeCodeParserTest extends TestCase
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertSame('query_references', $request['op']);
-                self::assertSame(['kind' => 'function', 'name' => 'helper'], $request['query']);
+                self::assertSame([
+                    'kind' => 'method',
+                    'name' => 'name',
+                    'receiver' => '$this',
+                ], $request['query']);
 
                 return self::dispatchJson($request);
             },
         );
 
-        $result = $parser->queryReferences($root, new ReferenceQuery(kind: 'function', name: 'helper'));
+        $result = $parser->queryReferences(
+            $root,
+            new ReferenceQuery(
+                kind: 'method',
+                name: 'name',
+                receiver: '$this',
+            ),
+        );
 
         self::assertSame($root, $result->root);
         self::assertSame('src/Example.php', $result->references[0]->file);
-        self::assertSame('function', $result->references[0]->kind);
-        self::assertSame('helper', $result->references[0]->name);
+        self::assertSame('method', $result->references[0]->kind);
+        self::assertSame('name', $result->references[0]->name);
+        self::assertSame('$this', $result->references[0]->receiver);
     }
 
     #[Test]
@@ -374,6 +386,7 @@ final class NativeCodeParserTest extends TestCase
         $reference['file'] = 'src/Example.php';
         $matches = ($query['kind'] ?? $reference['kind']) === $reference['kind']
             && ($query['name'] ?? $reference['name']) === $reference['name']
+            && ($query['receiver'] ?? $reference['receiver']) === $reference['receiver']
             && ($query['file'] ?? $reference['file']) === $reference['file']
             && ($query['context'] ?? $reference['context']) === $reference['context'];
 
@@ -418,8 +431,9 @@ final class NativeCodeParserTest extends TestCase
                 'context' => 'App\\Example',
             ]],
             'references' => [[
-                'kind' => 'function',
-                'name' => 'helper',
+                'kind' => 'method',
+                'name' => 'name',
+                'receiver' => '$this',
                 'span' => self::span(),
                 'context' => 'App\\Example::run',
             ]],

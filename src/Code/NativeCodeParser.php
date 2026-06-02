@@ -11,8 +11,9 @@ use RuntimeException;
 class NativeCodeParser implements CodeParser
 {
     /** @param (Closure(array<string, mixed>): string)|null $dispatch */
-    public function __construct(private ?Closure $dispatch = null)
-    {
+    public function __construct(
+        private ?Closure $dispatch = null,
+    ) {
     }
 
     public function parseSource(string $source, ?string $name = null): ParseResult
