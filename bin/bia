@@ -13,7 +13,7 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
     if (is_file($pharAutoload)) {
         require $pharAutoload;
 
-        $projectConfig = \Phalanx\Dory\Runtime\DoryProjectConfig::discover(getcwd() ?: '.');
+        $projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
 
         $env = array_filter(
             $_ENV + $_SERVER,
@@ -28,22 +28,22 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
         ];
 
         $providers = [
-            new \Phalanx\Dory\Runtime\DoryServiceBundle(),
-            new \Phalanx\Iris\HttpServiceBundle(),
-            new \Phalanx\Grammata\FilesystemServiceBundle(),
-            new \Phalanx\Argos\NetworkServiceBundle(),
-            new \Phalanx\Hermes\WsServiceBundle(),
+            new \Phalanx\Bia\Runtime\BiaServiceBundle(),
+            new \Phalanx\HttpClient\HttpServiceBundle(),
+            new \Phalanx\Filesystem\FilesystemServiceBundle(),
+            new \Phalanx\Network\NetworkServiceBundle(),
+            new \Phalanx\WebSocket\WsServiceBundle(),
         ];
 
-        if (class_exists(\Phalanx\DoryBin\DoryBinServiceBundle::class)) {
-            $providers[] = new \Phalanx\DoryBin\DoryBinServiceBundle();
+        if (class_exists(\Phalanx\BiaBin\BiaBinServiceBundle::class)) {
+            $providers[] = new \Phalanx\BiaBin\BiaBinServiceBundle();
         }
 
         exit(
-            \Phalanx\Archon\Application\Archon::starting($context)
+            \Phalanx\Console\Application\Console::starting($context)
                 ->providers(...$providers)
-                ->commands(\Phalanx\Dory\Command\DoryCommandGroup::commands())
-                ->withErrorRenderers(new \Phalanx\Dory\Console\ScriptFaultRenderer())
+                ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
+                ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
                 ->default('run')
                 ->run()
         );
@@ -67,18 +67,18 @@ if (!is_file($autoload)) {
 
 require $autoload;
 
-use Phalanx\Archon\Application\Archon;
-use Phalanx\Argos\NetworkServiceBundle;
-use Phalanx\Dory\Command\DoryCommandGroup;
-use Phalanx\Dory\Console\ScriptFaultRenderer;
-use Phalanx\Dory\Runtime\DoryProjectConfig;
-use Phalanx\Dory\Runtime\DoryServiceBundle;
-use Phalanx\Grammata\FilesystemServiceBundle;
-use Phalanx\Hermes\WsServiceBundle;
-use Phalanx\Iris\HttpServiceBundle;
+use Phalanx\Console\Application\Console;
+use Phalanx\Network\NetworkServiceBundle;
+use Phalanx\Bia\Command\BiaCommandGroup;
+use Phalanx\Bia\Console\ScriptFaultRenderer;
+use Phalanx\Bia\Runtime\BiaProjectConfig;
+use Phalanx\Bia\Runtime\BiaServiceBundle;
+use Phalanx\Filesystem\FilesystemServiceBundle;
+use Phalanx\WebSocket\WsServiceBundle;
+use Phalanx\HttpClient\HttpServiceBundle;
 
 return static fn(array $context): \Closure => static function () use ($context): int {
-    $projectConfig = DoryProjectConfig::discover(getcwd() ?: '.');
+    $projectConfig = BiaProjectConfig::discover(getcwd() ?: '.');
 
     $merged = [
         ...$projectConfig->contextOverlay(),
@@ -86,20 +86,20 @@ return static fn(array $context): \Closure => static function () use ($context):
     ];
 
     $providers = [
-        new DoryServiceBundle(),
+        new BiaServiceBundle(),
         new HttpServiceBundle(),
         new FilesystemServiceBundle(),
         new NetworkServiceBundle(),
         new WsServiceBundle(),
     ];
 
-    if (class_exists(\Phalanx\DoryBin\DoryBinServiceBundle::class)) {
-        $providers[] = new \Phalanx\DoryBin\DoryBinServiceBundle();
+    if (class_exists(\Phalanx\BiaBin\BiaBinServiceBundle::class)) {
+        $providers[] = new \Phalanx\BiaBin\BiaBinServiceBundle();
     }
 
-    return Archon::starting($merged)
+    return Console::starting($merged)
         ->providers(...$providers)
-        ->commands(DoryCommandGroup::commands())
+        ->commands(BiaCommandGroup::commands())
         ->withErrorRenderers(new ScriptFaultRenderer())
         ->default('run')
         ->run();

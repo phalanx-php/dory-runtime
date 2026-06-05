@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
-class DoryProjectConfig
+class BiaProjectConfig
 {
     private const array KEY_MAP = [
-        'timeout' => 'DORY_SCRIPT_TIMEOUT',
-        'concurrency' => 'DORY_MAX_CONCURRENCY',
-        'verbose' => 'DORY_VERBOSE',
+        'timeout' => 'BIA_SCRIPT_TIMEOUT',
+        'concurrency' => 'BIA_MAX_CONCURRENCY',
+        'verbose' => 'BIA_VERBOSE',
     ];
 
     private const array SERVE_KEY_MAP = [
@@ -33,9 +33,9 @@ class DoryProjectConfig
 
             if (is_file($path)) {
                 $json = json_decode((string) file_get_contents($path), true);
-                $dory = is_array($json) ? ($json['extra']['dory'] ?? []) : [];
+                $bia = is_array($json) ? ($json['extra']['bia'] ?? []) : [];
 
-                return new self(is_array($dory) ? $dory : [], $dir);
+                return new self(is_array($bia) ? $bia : [], $dir);
             }
 
             $parent = dirname($dir);

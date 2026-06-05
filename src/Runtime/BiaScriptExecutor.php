@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
-use Phalanx\Dory\Rendering\OutputSink;
-use Phalanx\Dory\Rendering\ValueRendererPipeline;
+use Phalanx\Bia\Rendering\OutputSink;
+use Phalanx\Bia\Rendering\ValueRendererPipeline;
 use Phalanx\Scope\ExecutionScope;
 use RuntimeException;
 
-final class DoryScriptExecutor
+final class BiaScriptExecutor
 {
-    public function execute(ExecutionScope $scope, string $scriptPath, ?DoryConfig $config = null): int
+    public function execute(ExecutionScope $scope, string $scriptPath, ?BiaConfig $config = null): int
     {
         if (!file_exists($scriptPath)) {
             throw new RuntimeException("Script not found: {$scriptPath}");
         }
 
         $resolved = realpath($scriptPath) ?: $scriptPath;
-        $config ??= $scope->service(DoryConfig::class);
+        $config ??= $scope->service(BiaConfig::class);
 
         $result = $scope->timeout(
             $config->scriptTimeout,
             static function (ExecutionScope $scriptScope) use ($resolved, $config): mixed {
-                return ScriptRunner::execute(new DoryExecutionContext(
+                return ScriptRunner::execute(new BiaExecutionContext(
                     inner: $scriptScope,
                     scriptPath: $resolved,
                     config: $config,

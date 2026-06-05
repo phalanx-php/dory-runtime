@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Code;
+namespace Phalanx\Bia\Tests\Unit\Code;
 
-use Phalanx\Dory\Code\DeclarationQuery;
-use Phalanx\Dory\Code\InvalidCodePayload;
-use Phalanx\Dory\Code\NativeCodeParser;
-use Phalanx\Dory\Code\NodeQuery;
-use Phalanx\Dory\Code\ParseResult;
-use Phalanx\Dory\Code\ReferenceQuery;
-use Phalanx\Dory\Code\TokenQuery;
+use Phalanx\Bia\Code\DeclarationQuery;
+use Phalanx\Bia\Code\InvalidCodePayload;
+use Phalanx\Bia\Code\NativeCodeParser;
+use Phalanx\Bia\Code\NodeQuery;
+use Phalanx\Bia\Code\ParseResult;
+use Phalanx\Bia\Code\ReferenceQuery;
+use Phalanx\Bia\Code\TokenQuery;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -58,7 +58,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function parse_file_builds_file_request(): void
     {
-        $path = sys_get_temp_dir() . '/dory-runtime-example.php';
+        $path = sys_get_temp_dir() . '/bia-runtime-example.php';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request) use ($path): string {
                 self::assertSame(['op' => 'parse_file', 'path' => $path], $request);
@@ -75,7 +75,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function index_project_hydrates_project_summary(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static fn (array $request): string => self::dispatchJson($request),
         );
@@ -94,7 +94,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function declaration_queries_are_typed_and_filterable(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertSame('query_declarations', $request['op']);
@@ -114,7 +114,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function token_queries_are_typed_and_filterable(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertSame('query_tokens', $request['op']);
@@ -135,7 +135,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function node_queries_are_typed_and_filterable(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertSame('query_nodes', $request['op']);
@@ -156,7 +156,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function reference_queries_are_typed_and_filterable(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertSame('query_references', $request['op']);
@@ -189,7 +189,7 @@ final class NativeCodeParserTest extends TestCase
     #[Test]
     public function empty_queries_are_encoded_as_empty_filter_objects(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $parser = new NativeCodeParser(
             dispatch: static function (array $request): string {
                 self::assertIsObject($request['query']);

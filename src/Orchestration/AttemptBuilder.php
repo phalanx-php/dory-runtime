@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Orchestration;
+namespace Phalanx\Bia\Orchestration;
 
 use Closure;
 use Phalanx\Cancellation\Cancelled;

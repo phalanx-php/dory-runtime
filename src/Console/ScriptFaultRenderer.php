@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Console;
+namespace Phalanx\Bia\Console;
 
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Console\ConsoleErrorRenderer;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Archon\Console\Style\Style;
-use Phalanx\Archon\Console\Style\Theme;
-use Phalanx\Archon\Console\Widget\SourcePreview;
-use Phalanx\Dory\Exception\ScriptFault;
-use Phalanx\Dory\Runtime\ScriptRunner;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Console\ConsoleErrorRenderer;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Console\Console\Style\Style;
+use Phalanx\Console\Console\Style\Theme;
+use Phalanx\Console\Console\Widget\SourcePreview;
+use Phalanx\Bia\Exception\ScriptFault;
+use Phalanx\Bia\Runtime\ScriptRunner;
 use Throwable;
 
 final readonly class ScriptFaultRenderer implements ConsoleErrorRenderer

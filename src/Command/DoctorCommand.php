@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Dory\Runtime\DoryConfig;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Bia\Runtime\BiaConfig;
 use Phalanx\Task\Scopeable;
-use Phalanx\Themis\ValidationContext;
+use Phalanx\Config\ValidationContext;
 
 class DoctorCommand implements Scopeable, DescribesCommand
 {
@@ -27,7 +27,7 @@ class DoctorCommand implements Scopeable, DescribesCommand
 
         $ok = self::check($output, 'PHP >= 8.4', version_compare(PHP_VERSION, '8.4.0', '>=')) && $ok;
         self::info($output, 'PHP version', PHP_VERSION);
-        $config = $ctx->service(DoryConfig::class);
+        $config = $ctx->service(BiaConfig::class);
         $sapi = php_sapi_name();
         $sapiLabel = $config->embedded ? "{$sapi} (ripht)" : $sapi;
 
@@ -60,7 +60,7 @@ class DoctorCommand implements Scopeable, DescribesCommand
         $output->persist('');
         $output->persist('Configuration');
 
-        self::checkDoryConfig($ctx, $output, $ok);
+        self::checkBiaConfig($ctx, $output, $ok);
 
         return $ok ? 0 : 1;
     }
@@ -70,8 +70,8 @@ class DoctorCommand implements Scopeable, DescribesCommand
         return new CommandConfig(
             description: 'Check runtime environment and extensions',
             examples: [
-                'dory doctor',
-                'dory check',
+                'bia doctor',
+                'bia check',
             ],
             aliases: ['check'],
         );
@@ -91,20 +91,20 @@ class DoctorCommand implements Scopeable, DescribesCommand
         $output->persist("  " . self::INFO . " {$text}");
     }
 
-    private static function checkDoryConfig(CommandContext $ctx, StreamOutput $output, bool &$ok): void
+    private static function checkBiaConfig(CommandContext $ctx, StreamOutput $output, bool &$ok): void
     {
-        $config = $ctx->service(DoryConfig::class);
+        $config = $ctx->service(BiaConfig::class);
         $issues = $config->validate(new ValidationContext());
 
         if ($issues === []) {
-            self::check($output, 'Dory config valid', true);
+            self::check($output, 'Bia config valid', true);
 
             return;
         }
 
         $ok = false;
 
-        self::check($output, 'Dory config', false);
+        self::check($output, 'Bia config', false);
 
         foreach ($issues as $issue) {
             $output->persist("    [{$issue->code}] {$issue->message}");

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\Arg;
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Command\Opt;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Dory\Code\CodeNodeRecord;
-use Phalanx\Dory\Code\CodeParser;
-use Phalanx\Dory\Code\NodeQuery;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Bia\Code\CodeNodeRecord;
+use Phalanx\Bia\Code\CodeParser;
+use Phalanx\Bia\Code\NodeQuery;
 use Phalanx\Task\Scopeable;
 
 class CodeNodesCommand implements Scopeable, DescribesCommand
@@ -92,8 +92,8 @@ class CodeNodesCommand implements Scopeable, DescribesCommand
                 Opt::flag('json', '', 'Emit JSON output'),
             ],
             examples: [
-                'dory code nodes --kind=method',
-                'dory code nodes app --name=run --json',
+                'bia code nodes --kind=method',
+                'bia code nodes app --name=run --json',
             ],
         );
     }

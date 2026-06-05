@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Rendering;
+namespace Phalanx\Bia\Tests\Unit\Rendering;
 
-use Phalanx\Dory\Rendering\OutputSink;
-use Phalanx\Dory\Rendering\ValueRenderer;
-use Phalanx\Dory\Rendering\ValueRendererPipeline;
-use Phalanx\Dory\Tests\Fixtures\BufferSink;
+use Phalanx\Bia\Rendering\OutputSink;
+use Phalanx\Bia\Rendering\ValueRenderer;
+use Phalanx\Bia\Rendering\ValueRendererPipeline;
+use Phalanx\Bia\Tests\Fixtures\BufferSink;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

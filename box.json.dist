@@ -1,6 +1,6 @@
 {
-    "main": "bin/dory",
-    "output": "build/dory.phar",
+    "main": "bin/bia",
+    "output": "build/bia.phar",
     "compression": "GZ",
     "finder": [
         {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Code;
+namespace Phalanx\Bia\Code;
 
 interface CodeParser
 {

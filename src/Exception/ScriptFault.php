@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Exception;
+namespace Phalanx\Bia\Exception;
 
 use RuntimeException;
 use Throwable;

@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Scoped;
+namespace Phalanx\Bia\Tests\Unit\Scoped;
 
-use Phalanx\Dory\Code\CodeParser;
-use Phalanx\Dory\Code\CodeProjectIndex;
-use Phalanx\Dory\Code\DeclarationIndex;
-use Phalanx\Dory\Code\DeclarationQuery;
-use Phalanx\Dory\Code\DeclarationQueryResult;
-use Phalanx\Dory\Code\NodeQuery;
-use Phalanx\Dory\Code\NodeQueryResult;
-use Phalanx\Dory\Code\ParseResult;
-use Phalanx\Dory\Code\ReferenceQuery;
-use Phalanx\Dory\Code\ReferenceQueryResult;
-use Phalanx\Dory\Code\SpanRecord;
-use Phalanx\Dory\Code\TokenIndex;
-use Phalanx\Dory\Code\TokenQuery;
-use Phalanx\Dory\Code\TokenQueryResult;
-use Phalanx\Dory\Scoped\ScopedCode;
+use Phalanx\Bia\Code\CodeParser;
+use Phalanx\Bia\Code\CodeProjectIndex;
+use Phalanx\Bia\Code\DeclarationIndex;
+use Phalanx\Bia\Code\DeclarationQuery;
+use Phalanx\Bia\Code\DeclarationQueryResult;
+use Phalanx\Bia\Code\NodeQuery;
+use Phalanx\Bia\Code\NodeQueryResult;
+use Phalanx\Bia\Code\ParseResult;
+use Phalanx\Bia\Code\ReferenceQuery;
+use Phalanx\Bia\Code\ReferenceQueryResult;
+use Phalanx\Bia\Code\SpanRecord;
+use Phalanx\Bia\Code\TokenIndex;
+use Phalanx\Bia\Code\TokenQuery;
+use Phalanx\Bia\Code\TokenQueryResult;
+use Phalanx\Bia\Scoped\ScopedCode;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -43,7 +43,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function parse_file_uses_injected_parser(): void
     {
-        $path = sys_get_temp_dir() . '/dory-runtime-example.php';
+        $path = sys_get_temp_dir() . '/bia-runtime-example.php';
         $result = self::parseResult($path);
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())
@@ -59,7 +59,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function declarations_for_file_returns_declaration_index(): void
     {
-        $path = sys_get_temp_dir() . '/dory-runtime-example.php';
+        $path = sys_get_temp_dir() . '/bia-runtime-example.php';
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())->method('parseFile')->with($path)->willReturn(self::parseResult($path));
 
@@ -111,7 +111,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function project_methods_pass_explicit_queries_to_parser(): void
     {
-        $root = sys_get_temp_dir() . '/dory-runtime-project';
+        $root = sys_get_temp_dir() . '/bia-runtime-project';
         $declarationQuery = new DeclarationQuery(kind: 'class');
         $tokenQuery = new TokenQuery(text: 'class');
         $nodeQuery = new NodeQuery(kind: 'method');

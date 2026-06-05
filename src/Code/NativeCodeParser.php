@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Code;
+namespace Phalanx\Bia\Code;
 
 use Closure;
 use JsonException;
@@ -109,11 +109,11 @@ class NativeCodeParser implements CodeParser
     /** @return Closure(array<string, mixed>): string */
     private static function nativeQueryDispatcher(): Closure
     {
-        if (!function_exists('dory_code_query_json')) {
-            throw new RuntimeException('Dory code parser is not available in this runtime.');
+        if (!function_exists('bia_code_query_json')) {
+            throw new RuntimeException('Bia code parser is not available in this runtime.');
         }
 
-        return static fn (array $request): string => dory_code_query_json(json_encode($request, JSON_THROW_ON_ERROR));
+        return static fn (array $request): string => bia_code_query_json(json_encode($request, JSON_THROW_ON_ERROR));
     }
 
     /** @return array<string, mixed> */
@@ -132,7 +132,7 @@ class NativeCodeParser implements CodeParser
         if (PayloadReader::bool($payload, 'ok') !== true) {
             $message = $payload['message'] ?? null;
 
-            throw new RuntimeException(is_string($message) ? $message : 'Dory code parser failed.');
+            throw new RuntimeException(is_string($message) ? $message : 'Bia code parser failed.');
         }
 
         return $payload;

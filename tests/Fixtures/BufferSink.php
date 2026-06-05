@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Fixtures;
+namespace Phalanx\Bia\Tests\Fixtures;
 
-use Phalanx\Dory\Rendering\OutputSink;
+use Phalanx\Bia\Rendering\OutputSink;
 
 final class BufferSink implements OutputSink
 {

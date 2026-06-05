@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
 use Phalanx\Application;
 use Phalanx\ApplicationBuilder;
-use Phalanx\Argos\NetworkServiceBundle;
+use Phalanx\Network\NetworkServiceBundle;
 use Phalanx\Boot\AppContext;
-use Phalanx\Grammata\FilesystemServiceBundle;
-use Phalanx\Hermes\WsServiceBundle;
-use Phalanx\Iris\HttpServiceBundle;
+use Phalanx\Filesystem\FilesystemServiceBundle;
+use Phalanx\WebSocket\WsServiceBundle;
+use Phalanx\HttpClient\HttpServiceBundle;
 use Phalanx\Middleware\ServiceTransformationMiddleware;
 use Phalanx\Middleware\TaskMiddleware;
 use Phalanx\Service\ServiceBundle;
 
-class DoryBuilder
+class BiaBuilder
 {
     private ApplicationBuilder $app;
     private ?string $scriptPath = null;
 
     public function __construct(AppContext $context = new AppContext())
     {
-        $projectConfig = DoryProjectConfig::discover(getcwd() ?: '.');
+        $projectConfig = BiaProjectConfig::discover(getcwd() ?: '.');
 
         $merged = new AppContext([
             ...$projectConfig->contextOverlay(),
@@ -30,7 +30,7 @@ class DoryBuilder
         ]);
 
         $this->app = Application::starting($merged->values);
-        $this->app->providers(new DoryServiceBundle());
+        $this->app->providers(new BiaServiceBundle());
 
         $this->autoDetectModules();
     }
@@ -59,11 +59,11 @@ class DoryBuilder
         return $this;
     }
 
-    public function build(): DoryApplication
+    public function build(): BiaApplication
     {
         $host = $this->app->compile();
 
-        return new DoryApplication(
+        return new BiaApplication(
             host: $host,
             scriptPath: $this->scriptPath,
         );

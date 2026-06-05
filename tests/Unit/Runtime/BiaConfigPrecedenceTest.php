@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Runtime;
+namespace Phalanx\Bia\Tests\Unit\Runtime;
 
-use Phalanx\Dory\Runtime\DoryConfig;
-use Phalanx\Dory\Runtime\DoryProjectConfig;
-use Phalanx\Dory\Tests\Fixtures\TemporaryDirectoryTrait;
-use Phalanx\Themis\ConfigFactory;
+use Phalanx\Bia\Runtime\BiaConfig;
+use Phalanx\Bia\Runtime\BiaProjectConfig;
+use Phalanx\Bia\Tests\Fixtures\TemporaryDirectoryTrait;
+use Phalanx\Config\ConfigFactory;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-final class DoryConfigPrecedenceTest extends TestCase
+final class BiaConfigPrecedenceTest extends TestCase
 {
     use TemporaryDirectoryTrait;
 
@@ -28,7 +28,7 @@ final class DoryConfigPrecedenceTest extends TestCase
 
         $context = $project->contextOverlay();
 
-        $config = ConfigFactory::fromContext($context)->hydrate(DoryConfig::class);
+        $config = ConfigFactory::fromContext($context)->hydrate(BiaConfig::class);
 
         self::assertSame(120.0, $config->scriptTimeout);
         self::assertSame(25, $config->maxConcurrency);
@@ -41,16 +41,16 @@ final class DoryConfigPrecedenceTest extends TestCase
 
         $context = [
             ...$project->contextOverlay(),
-            'DORY_SCRIPT_TIMEOUT' => '45',
+            'BIA_SCRIPT_TIMEOUT' => '45',
         ];
 
-        $config = ConfigFactory::fromContext($context)->hydrate(DoryConfig::class);
+        $config = ConfigFactory::fromContext($context)->hydrate(BiaConfig::class);
 
         self::assertSame(45.0, $config->scriptTimeout);
     }
 
     #[Test]
-    public function env_wins_for_all_dory_config_fields(): void
+    public function env_wins_for_all_bia_config_fields(): void
     {
         $project = $this->projectWith([
             'timeout' => 120,
@@ -59,9 +59,9 @@ final class DoryConfigPrecedenceTest extends TestCase
         ]);
 
         $env = [
-            'DORY_SCRIPT_TIMEOUT' => '10',
-            'DORY_MAX_CONCURRENCY' => '5',
-            'DORY_VERBOSE' => 'true',
+            'BIA_SCRIPT_TIMEOUT' => '10',
+            'BIA_MAX_CONCURRENCY' => '5',
+            'BIA_VERBOSE' => 'true',
         ];
 
         $context = [
@@ -69,7 +69,7 @@ final class DoryConfigPrecedenceTest extends TestCase
             ...$env,
         ];
 
-        $config = ConfigFactory::fromContext($context)->hydrate(DoryConfig::class);
+        $config = ConfigFactory::fromContext($context)->hydrate(BiaConfig::class);
 
         self::assertSame(10.0, $config->scriptTimeout);
         self::assertSame(5, $config->maxConcurrency);
@@ -82,7 +82,7 @@ final class DoryConfigPrecedenceTest extends TestCase
         $project = $this->projectWith([]);
 
         $config = ConfigFactory::fromContext($project->contextOverlay())
-            ->hydrate(DoryConfig::class);
+            ->hydrate(BiaConfig::class);
 
         self::assertSame(30.0, $config->scriptTimeout);
         self::assertSame(50, $config->maxConcurrency);
@@ -95,23 +95,23 @@ final class DoryConfigPrecedenceTest extends TestCase
         $project = $this->projectWith(['timeout' => 90]);
 
         $config = ConfigFactory::fromContext($project->contextOverlay())
-            ->hydrate(DoryConfig::class);
+            ->hydrate(BiaConfig::class);
 
         self::assertSame(90.0, $config->scriptTimeout);
         self::assertSame(50, $config->maxConcurrency);
         self::assertFalse($config->verbose);
     }
 
-    /** @param array<string, mixed> $doryConfig */
-    private function projectWith(array $doryConfig): DoryProjectConfig
+    /** @param array<string, mixed> $biaConfig */
+    private function projectWith(array $biaConfig): BiaProjectConfig
     {
-        $dir = $this->makeTempDir('dory_precedence_');
+        $dir = $this->makeTempDir('bia_precedence_');
 
         file_put_contents($dir . '/composer.json', json_encode([
             'name' => 'test/precedence',
-            'extra' => ['dory' => $doryConfig],
+            'extra' => ['bia' => $biaConfig],
         ]));
 
-        return DoryProjectConfig::discover($dir);
+        return BiaProjectConfig::discover($dir);
     }
 }

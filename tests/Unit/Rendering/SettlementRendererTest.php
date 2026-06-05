@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Rendering;
+namespace Phalanx\Bia\Tests\Unit\Rendering;
 
 use Phalanx\Concurrency\Settlement;
 use Phalanx\Concurrency\SettlementBag;
-use Phalanx\Dory\Rendering\SettlementRenderer;
-use Phalanx\Dory\Tests\Fixtures\BufferSink;
+use Phalanx\Bia\Rendering\SettlementRenderer;
+use Phalanx\Bia\Tests\Fixtures\BufferSink;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

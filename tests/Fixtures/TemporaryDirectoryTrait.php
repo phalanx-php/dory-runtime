@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Fixtures;
+namespace Phalanx\Bia\Tests\Fixtures;
 
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
@@ -19,7 +19,7 @@ trait TemporaryDirectoryTrait
         }
     }
 
-    private function makeTempDir(string $prefix = 'dory_test_'): string
+    private function makeTempDir(string $prefix = 'bia_test_'): string
     {
         $dir = sys_get_temp_dir() . '/' . $prefix . uniqid('', true);
         mkdir($dir, 0777, true);

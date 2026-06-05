@@ -20,11 +20,11 @@ if ($autoload === null) {
 
 $loader = require $autoload;
 
-$loader->addPsr4('Phalanx\\Dory\\', dirname(__DIR__) . '/src/');
-$loader->addPsr4('Phalanx\\Dory\\Tests\\', dirname(__DIR__) . '/tests/');
+$loader->addPsr4('Phalanx\\Bia\\', dirname(__DIR__) . '/src/');
+$loader->addPsr4('Phalanx\\Bia\\Tests\\', dirname(__DIR__) . '/tests/');
 
 $functionsFile = dirname(__DIR__) . '/src/functions.php';
 
-if (is_file($functionsFile) && !function_exists('dory')) {
+if (is_file($functionsFile) && !function_exists('bia')) {
     require $functionsFile;
 }

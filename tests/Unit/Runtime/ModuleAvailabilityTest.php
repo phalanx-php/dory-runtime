@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Runtime;
+namespace Phalanx\Bia\Tests\Unit\Runtime;
 
-use Phalanx\Argos\NetworkConfig;
-use Phalanx\Argos\NetworkServiceBundle;
-use Phalanx\Grammata\FilesystemServiceBundle;
-use Phalanx\Hermes\Client\WsClientConfig;
-use Phalanx\Hermes\WsServiceBundle;
-use Phalanx\Hydra\HydraServiceBundle;
-use Phalanx\Iris\HttpServiceBundle;
-use Phalanx\Skopos\Skopos;
-use Phalanx\Themis\ValidationContext;
+use Phalanx\Network\NetworkConfig;
+use Phalanx\Network\NetworkServiceBundle;
+use Phalanx\Filesystem\FilesystemServiceBundle;
+use Phalanx\WebSocket\Client\WsClientConfig;
+use Phalanx\WebSocket\WsServiceBundle;
+use Phalanx\Worker\WorkerServiceBundle;
+use Phalanx\HttpClient\HttpServiceBundle;
+use Phalanx\DevServer\DevServer;
+use Phalanx\Config\ValidationContext;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -30,13 +30,13 @@ final class ModuleAvailabilityTest extends TestCase
     #[Test]
     public function opt_in_module_bundle_exists(): void
     {
-        self::assertTrue(class_exists(HydraServiceBundle::class));
+        self::assertTrue(class_exists(WorkerServiceBundle::class));
     }
 
     #[Test]
     public function skopos_is_class_available(): void
     {
-        self::assertTrue(class_exists(Skopos::class));
+        self::assertTrue(class_exists(DevServer::class));
     }
 
     #[Test]

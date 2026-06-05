@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\Arg;
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Command\Opt;
-use Phalanx\Archon\Console\Output\StreamOutput;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
+use Phalanx\Console\Console\Output\StreamOutput;
 use Phalanx\Task\Scopeable;
 
 class InitCommand implements Scopeable, DescribesCommand
@@ -19,13 +19,13 @@ class InitCommand implements Scopeable, DescribesCommand
 
         declare(strict_types=1);
 
-        dory()->println('Greetings from Olympus.');
+        bia()->println('Greetings from Olympus.');
 
-        $result = dory()->attempt(static fn(): string => 'The phalanx holds.')
+        $result = bia()->attempt(static fn(): string => 'The phalanx holds.')
             ->timeout(5.0)
             ->run();
 
-        dory()->dump($result);
+        bia()->dump($result);
 
         return 0;
         PHP;
@@ -56,7 +56,7 @@ class InitCommand implements Scopeable, DescribesCommand
         $output->persist("Created: {$scriptPath}");
         $output->persist('');
         $output->persist('Run it with:');
-        $output->persist("  dory run {$scriptPath}");
+        $output->persist("  bia run {$scriptPath}");
 
         return 0;
     }
@@ -64,7 +64,7 @@ class InitCommand implements Scopeable, DescribesCommand
     public static function commandConfig(): CommandConfig
     {
         return new CommandConfig(
-            description: 'Scaffold a new Dory project with a sample script',
+            description: 'Scaffold a new Bia project with a sample script',
             arguments: [
                 Arg::optional('directory', 'Target directory', '.'),
             ],
@@ -73,9 +73,9 @@ class InitCommand implements Scopeable, DescribesCommand
                 Opt::flag('force', 'f', 'Overwrite existing files'),
             ],
             examples: [
-                'dory init my-project',
-                'dory new . --name=sync.php',
-                'dory init scripts -f',
+                'bia init my-project',
+                'bia new . --name=sync.php',
+                'bia init scripts -f',
             ],
             aliases: ['new'],
         );

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Runtime;
+namespace Phalanx\Bia\Tests\Unit\Runtime;
 
-use Phalanx\Dory\Runtime\DoryConfig;
-use Phalanx\Dory\Runtime\DoryExecutionContext;
-use Phalanx\Dory\Runtime\ScriptContextHolder;
-use Phalanx\Dory\Runtime\ScriptRunner;
+use Phalanx\Bia\Runtime\BiaConfig;
+use Phalanx\Bia\Runtime\BiaExecutionContext;
+use Phalanx\Bia\Runtime\ScriptContextHolder;
+use Phalanx\Bia\Runtime\ScriptRunner;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -18,23 +18,23 @@ final class ScriptRunnerTest extends TestCase
     public function executes_script_and_returns_result(): void
     {
         $scope = $this->createStub(ExecutionScope::class);
-        $config = new DoryConfig();
-        $dory = new DoryExecutionContext($scope, __DIR__ . '/../../Fixtures/return-42.php', $config);
+        $config = new BiaConfig();
+        $bia = new BiaExecutionContext($scope, __DIR__ . '/../../Fixtures/return-42.php', $config);
 
-        $result = ScriptRunner::execute($dory);
+        $result = ScriptRunner::execute($bia);
 
         self::assertSame(42, $result);
     }
 
     #[Test]
-    public function script_receives_dory_context(): void
+    public function script_receives_bia_context(): void
     {
         $scope = $this->createStub(ExecutionScope::class);
-        $config = new DoryConfig();
-        $dory = new DoryExecutionContext($scope, __DIR__ . '/../../Fixtures/echo-dory.php', $config);
+        $config = new BiaConfig();
+        $bia = new BiaExecutionContext($scope, __DIR__ . '/../../Fixtures/echo-bia.php', $config);
 
         ob_start();
-        $result = ScriptRunner::execute($dory);
+        $result = ScriptRunner::execute($bia);
         $output = ob_get_clean();
 
         self::assertSame(0, $result);
@@ -45,52 +45,52 @@ final class ScriptRunnerTest extends TestCase
     public function script_exception_propagates(): void
     {
         $scope = $this->createStub(ExecutionScope::class);
-        $config = new DoryConfig();
-        $dory = new DoryExecutionContext($scope, __DIR__ . '/../../Fixtures/throw-error.php', $config);
+        $config = new BiaConfig();
+        $bia = new BiaExecutionContext($scope, __DIR__ . '/../../Fixtures/throw-error.php', $config);
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('phalanx broken');
 
-        ScriptRunner::execute($dory);
+        ScriptRunner::execute($bia);
     }
 
     #[Test]
-    public function dory_outside_context_throws_logic_exception(): void
+    public function bia_outside_context_throws_logic_exception(): void
     {
         ScriptContextHolder::clear();
 
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('dory() called outside of a script context');
+        $this->expectExceptionMessage('bia() called outside of a script context');
 
-        dory();
+        bia();
     }
 
     #[Test]
     public function context_is_cleared_after_execution(): void
     {
         $scope = $this->createStub(ExecutionScope::class);
-        $config = new DoryConfig();
-        $dory = new DoryExecutionContext($scope, __DIR__ . '/../../Fixtures/return-42.php', $config);
+        $config = new BiaConfig();
+        $bia = new BiaExecutionContext($scope, __DIR__ . '/../../Fixtures/return-42.php', $config);
 
-        ScriptRunner::execute($dory);
+        ScriptRunner::execute($bia);
 
         $this->expectException(\LogicException::class);
-        dory();
+        bia();
     }
 
     #[Test]
     public function context_is_cleared_after_exception(): void
     {
         $scope = $this->createStub(ExecutionScope::class);
-        $config = new DoryConfig();
-        $dory = new DoryExecutionContext($scope, __DIR__ . '/../../Fixtures/throw-error.php', $config);
+        $config = new BiaConfig();
+        $bia = new BiaExecutionContext($scope, __DIR__ . '/../../Fixtures/throw-error.php', $config);
 
         try {
-            ScriptRunner::execute($dory);
+            ScriptRunner::execute($bia);
         } catch (\RuntimeException) {
         }
 
         $this->expectException(\LogicException::class);
-        dory();
+        bia();
     }
 }

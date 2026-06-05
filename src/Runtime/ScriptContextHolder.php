@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
 use Closure;
 
@@ -39,7 +39,7 @@ final class ScriptContextHolder
         $context = $stack === [] ? null : $stack[array_key_last($stack)];
 
         if ($context === null) {
-            throw new \LogicException('dory() called outside of a script context. This function is only available inside scripts executed by Dory.');
+            throw new \LogicException('bia() called outside of a script context. This function is only available inside scripts executed by Bia.');
         }
 
         return $context;

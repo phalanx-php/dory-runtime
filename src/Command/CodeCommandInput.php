@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Dory\Code\ParseError;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Bia\Code\ParseError;
 
 final class CodeCommandInput
 {

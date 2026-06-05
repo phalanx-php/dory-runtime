@@ -2,32 +2,32 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\Arg;
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Command\Opt;
-use Phalanx\Argos\NetworkServiceBundle;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
+use Phalanx\Network\NetworkServiceBundle;
 use Phalanx\Boot\AppContext;
-use Phalanx\Dory\Runtime\DoryConfig;
-use Phalanx\Dory\Runtime\DoryExecutionContext;
-use Phalanx\Dory\Runtime\DoryProjectConfig;
-use Phalanx\Dory\Runtime\DoryScriptRoute;
-use Phalanx\Dory\Runtime\DoryServeConfig;
-use Phalanx\Dory\Runtime\DoryServeServiceBundle;
-use Phalanx\Dory\Runtime\DoryServiceBundle;
-use Phalanx\Dory\Runtime\ScriptRunner;
-use Phalanx\Grammata\FilesystemServiceBundle;
-use Phalanx\Hermes\WsServiceBundle;
-use Phalanx\Iris\HttpServiceBundle;
+use Phalanx\Bia\Runtime\BiaConfig;
+use Phalanx\Bia\Runtime\BiaExecutionContext;
+use Phalanx\Bia\Runtime\BiaProjectConfig;
+use Phalanx\Bia\Runtime\BiaScriptRoute;
+use Phalanx\Bia\Runtime\BiaServeConfig;
+use Phalanx\Bia\Runtime\BiaServeServiceBundle;
+use Phalanx\Bia\Runtime\BiaServiceBundle;
+use Phalanx\Bia\Runtime\ScriptRunner;
+use Phalanx\Filesystem\FilesystemServiceBundle;
+use Phalanx\WebSocket\WsServiceBundle;
+use Phalanx\HttpClient\HttpServiceBundle;
 use Phalanx\Scope\ExecutionScope;
-use Phalanx\Stoa\RouteGroup;
-use Phalanx\Stoa\Stoa;
-use Phalanx\Stoa\StoaApplication;
-use Phalanx\Stoa\StoaApplicationBuilder;
-use Phalanx\Stoa\StoaServerConfig;
+use Phalanx\Http\RouteGroup;
+use Phalanx\Http\Http;
+use Phalanx\Http\HttpApplication;
+use Phalanx\Http\HttpApplicationBuilder;
+use Phalanx\Http\HttpServerConfig;
 use Phalanx\Task\Scopeable;
 use RuntimeException;
 
@@ -36,11 +36,11 @@ class ServeCommand implements Scopeable, DescribesCommand
     public function __invoke(CommandContext $ctx): int
     {
         $scriptPath = self::resolveScript((string) $ctx->args->required('script'));
-        $base = $ctx->service(DoryConfig::class);
+        $base = $ctx->service(BiaConfig::class);
         $serverConfig = self::serverConfig($ctx);
 
-        $app = self::isStoaMode($ctx, $scriptPath)
-            ? self::loadStoaApplication($ctx, $scriptPath, $base, $serverConfig)
+        $app = self::isHttpMode($ctx, $scriptPath)
+            ? self::loadHttpApplication($ctx, $scriptPath, $base, $serverConfig)
             : self::scriptApplication($ctx, $scriptPath, $base, $serverConfig);
 
         return $app->run();
@@ -49,21 +49,21 @@ class ServeCommand implements Scopeable, DescribesCommand
     public static function commandConfig(): CommandConfig
     {
         return new CommandConfig(
-            description: 'Serve a Dory or Stoa script over HTTP',
+            description: 'Serve a Bia or Http script over HTTP',
             arguments: [
-                Arg::required('script', 'Path to the Dory or Stoa script'),
+                Arg::required('script', 'Path to the Bia or Http script'),
             ],
             options: [
                 Opt::value('host', '', 'Listen host'),
                 Opt::value('port', 'p', 'Listen port'),
                 Opt::value('listen', 'l', 'Listen address as host:port'),
-                Opt::flag('stoa', '', 'Treat the script as a Stoa application bootstrap'),
+                Opt::flag('http', '', 'Treat the script as a Http application bootstrap'),
             ],
             examples: [
-                'dory serve app.php',
-                'APP_PORT=9000 dory serve app.php',
-                'dory serve app.php --listen=127.0.0.1:9000',
-                'dory serve app.php --stoa',
+                'bia serve app.php',
+                'APP_PORT=9000 bia serve app.php',
+                'bia serve app.php --listen=127.0.0.1:9000',
+                'bia serve app.php --http',
             ],
         );
     }
@@ -79,65 +79,65 @@ class ServeCommand implements Scopeable, DescribesCommand
         return $resolved;
     }
 
-    private static function loadStoaApplication(
+    private static function loadHttpApplication(
         CommandContext $ctx,
         string $scriptPath,
-        DoryConfig $doryConfig,
-        StoaServerConfig $serverConfig,
-    ): StoaApplication {
+        BiaConfig $biaConfig,
+        HttpServerConfig $serverConfig,
+    ): HttpApplication {
         $result = null;
 
         /** Suppress bootstrap output so it doesn't leak into the HTTP response. */
         ob_start();
         try {
-            $result = $ctx->execute(static function (ExecutionScope $scope) use ($scriptPath, $doryConfig): mixed {
-                return ScriptRunner::execute(new DoryExecutionContext(
+            $result = $ctx->execute(static function (ExecutionScope $scope) use ($scriptPath, $biaConfig): mixed {
+                return ScriptRunner::execute(new BiaExecutionContext(
                     inner: $scope,
                     scriptPath: $scriptPath,
-                    config: $doryConfig,
+                    config: $biaConfig,
                 ));
             });
         } finally {
             ob_end_clean();
         }
 
-        if ($result instanceof StoaApplication) {
+        if ($result instanceof HttpApplication) {
             return $result;
         }
 
-        if ($result instanceof StoaApplicationBuilder) {
+        if ($result instanceof HttpApplicationBuilder) {
             return $result->withServerConfig($serverConfig)->build();
         }
 
-        throw new RuntimeException('Stoa serve mode requires the script to return a StoaApplication or StoaApplicationBuilder.');
+        throw new RuntimeException('Http serve mode requires the script to return a HttpApplication or HttpApplicationBuilder.');
     }
 
     private static function scriptApplication(
         CommandContext $ctx,
         string $scriptPath,
-        DoryConfig $doryConfig,
-        StoaServerConfig $serverConfig,
-    ): StoaApplication {
+        BiaConfig $biaConfig,
+        HttpServerConfig $serverConfig,
+    ): HttpApplication {
         $context = $ctx->service(AppContext::class);
 
-        return Stoa::starting($context->values)
+        return Http::starting($context->values)
             ->providers(
-                new DoryServiceBundle(),
+                new BiaServiceBundle(),
                 new HttpServiceBundle(),
                 new FilesystemServiceBundle(),
                 new NetworkServiceBundle(),
                 new WsServiceBundle(),
-                new DoryServeServiceBundle(new DoryServeConfig($scriptPath, $doryConfig)),
+                new BiaServeServiceBundle(new BiaServeConfig($scriptPath, $biaConfig)),
             )
             ->withServerConfig($serverConfig)
             ->routes(RouteGroup::of([
-                'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS /{path:any}' => DoryScriptRoute::class,
-                'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS /' => DoryScriptRoute::class,
+                'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS /{path:any}' => BiaScriptRoute::class,
+                'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS /' => BiaScriptRoute::class,
             ]))
             ->build();
     }
 
-    private static function serverConfig(CommandContext $ctx): StoaServerConfig
+    private static function serverConfig(CommandContext $ctx): HttpServerConfig
     {
         $values = $ctx->service(AppContext::class)->values;
 
@@ -161,7 +161,7 @@ class ServeCommand implements Scopeable, DescribesCommand
             $values['PHALANX_PORT'] = (int) $port;
         }
 
-        return StoaServerConfig::fromRuntimeOptions($values);
+        return HttpServerConfig::fromRuntimeOptions($values);
     }
 
     /** @return array{string, int} */
@@ -183,14 +183,14 @@ class ServeCommand implements Scopeable, DescribesCommand
         return [$host, $port];
     }
 
-    private static function isStoaMode(CommandContext $ctx, string $scriptPath): bool
+    private static function isHttpMode(CommandContext $ctx, string $scriptPath): bool
     {
-        if ($ctx->options->flag('stoa')) {
+        if ($ctx->options->flag('http')) {
             return true;
         }
 
-        $projectConfig = DoryProjectConfig::discover(dirname($scriptPath));
+        $projectConfig = BiaProjectConfig::discover(dirname($scriptPath));
 
-        return ($projectConfig->section('serve')['mode'] ?? null) === 'stoa';
+        return ($projectConfig->section('serve')['mode'] ?? null) === 'http';
     }
 }

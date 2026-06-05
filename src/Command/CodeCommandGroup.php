@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\CommandGroup;
+use Phalanx\Console\Command\CommandGroup;
 
 class CodeCommandGroup
 {
@@ -16,6 +16,6 @@ class CodeCommandGroup
             'nodes' => CodeNodesCommand::class,
             'references' => CodeReferencesCommand::class,
             'tokens' => CodeTokensCommand::class,
-        ], 'dory code');
+        ], 'bia code');
     }
 }

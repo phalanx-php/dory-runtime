@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
 use Closure;
-use Phalanx\Dory\Orchestration\AttemptBuilder;
-use Phalanx\Dory\Scoped\ScopedCode;
-use Phalanx\Dory\Scoped\ScopedFiles;
-use Phalanx\Dory\Scoped\ScopedHttpClient;
+use Phalanx\Bia\Orchestration\AttemptBuilder;
+use Phalanx\Bia\Scoped\ScopedCode;
+use Phalanx\Bia\Scoped\ScopedFiles;
+use Phalanx\Bia\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
 
 interface ScriptContext extends ExecutionScope
@@ -17,7 +17,7 @@ interface ScriptContext extends ExecutionScope
 
     public string $scriptName { get; }
 
-    public DoryConfig $config { get; }
+    public BiaConfig $config { get; }
 
     public ScopedHttpClient $http { get; }
 

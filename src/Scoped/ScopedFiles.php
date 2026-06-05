@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Scoped;
+namespace Phalanx\Bia\Scoped;
 
-use Phalanx\Grammata\FileInfo;
-use Phalanx\Grammata\Files;
+use Phalanx\Filesystem\FileInfo;
+use Phalanx\Filesystem\Files;
 use Phalanx\Scope\ExecutionScope;
-use Phalanx\Styx\Emitter;
+use Phalanx\Stream\Emitter;
 
 class ScopedFiles
 {

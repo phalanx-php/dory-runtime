@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Dory\Code\CodePayload;
-use Phalanx\Dory\Code\CodeProjectIndex;
-use Phalanx\Dory\Code\DeclarationQueryResult;
-use Phalanx\Dory\Code\NodeQueryResult;
-use Phalanx\Dory\Code\ReferenceQueryResult;
-use Phalanx\Dory\Code\TokenQueryResult;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Bia\Code\CodePayload;
+use Phalanx\Bia\Code\CodeProjectIndex;
+use Phalanx\Bia\Code\DeclarationQueryResult;
+use Phalanx\Bia\Code\NodeQueryResult;
+use Phalanx\Bia\Code\ReferenceQueryResult;
+use Phalanx\Bia\Code\TokenQueryResult;
 
 final class CodeCommandOutput
 {

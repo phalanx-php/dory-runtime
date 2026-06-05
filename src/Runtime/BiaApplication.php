@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
 use Phalanx\AppHost;
 use Phalanx\Cancellation\Cancelled;
 use Throwable;
 
-class DoryApplication
+class BiaApplication
 {
     public function __construct(
         private AppHost $host,
@@ -34,7 +34,7 @@ class DoryApplication
             $scope = $this->host->createScope();
 
             try {
-                return $scope->service(DoryScriptExecutor::class)
+                return $scope->service(BiaScriptExecutor::class)
                     ->execute($scope, $this->scriptPath);
             } catch (Cancelled $e) {
                 throw $e;

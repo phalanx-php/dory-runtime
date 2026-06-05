@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
-use Phalanx\Themis\Config;
-use Phalanx\Themis\Env;
-use Phalanx\Themis\Issue;
-use Phalanx\Themis\IssueLevel;
-use Phalanx\Themis\ValidationContext;
+use Phalanx\Config\Config;
+use Phalanx\Config\Env;
+use Phalanx\Config\Issue;
+use Phalanx\Config\IssueLevel;
+use Phalanx\Config\ValidationContext;
 
-final class DoryConfig implements Config
+final class BiaConfig implements Config
 {
     private const int DEFAULT_MAX_CONCURRENCY = 50;
 
@@ -22,16 +22,16 @@ final class DoryConfig implements Config
     }
 
     public function __construct(
-        #[Env(key: 'DORY_SCRIPT_TIMEOUT', description: 'Maximum script runtime in seconds')]
+        #[Env(key: 'BIA_SCRIPT_TIMEOUT', description: 'Maximum script runtime in seconds')]
         private(set) float $scriptTimeout = self::DEFAULT_SCRIPT_TIMEOUT,
 
-        #[Env(key: 'DORY_MAX_CONCURRENCY', description: 'Maximum concurrent tasks per script')]
+        #[Env(key: 'BIA_MAX_CONCURRENCY', description: 'Maximum concurrent tasks per script')]
         private(set) int $maxConcurrency = self::DEFAULT_MAX_CONCURRENCY,
 
-        #[Env(key: 'DORY_VERBOSE', description: 'Enable verbose script output')]
+        #[Env(key: 'BIA_VERBOSE', description: 'Enable verbose script output')]
         private(set) bool $verbose = false,
 
-        #[Env(key: 'DORY_EMBEDDED', description: 'Running inside ripht-hosted binary')]
+        #[Env(key: 'BIA_EMBEDDED', description: 'Running inside ripht-hosted binary')]
         private(set) bool $embedded = false,
     ) {
     }
@@ -44,9 +44,9 @@ final class DoryConfig implements Config
         if ($this->scriptTimeout <= 0) {
             $issues[] = new Issue(
                 IssueLevel::Error,
-                'dory.script-timeout',
-                'DORY_SCRIPT_TIMEOUT must be greater than 0.',
-                envKey: 'DORY_SCRIPT_TIMEOUT',
+                'bia.script-timeout',
+                'BIA_SCRIPT_TIMEOUT must be greater than 0.',
+                envKey: 'BIA_SCRIPT_TIMEOUT',
                 path: 'scriptTimeout',
             );
         }
@@ -54,9 +54,9 @@ final class DoryConfig implements Config
         if ($this->maxConcurrency < 1) {
             $issues[] = new Issue(
                 IssueLevel::Error,
-                'dory.max-concurrency',
-                'DORY_MAX_CONCURRENCY must be at least 1.',
-                envKey: 'DORY_MAX_CONCURRENCY',
+                'bia.max-concurrency',
+                'BIA_MAX_CONCURRENCY must be at least 1.',
+                envKey: 'BIA_MAX_CONCURRENCY',
                 path: 'maxConcurrency',
             );
         }

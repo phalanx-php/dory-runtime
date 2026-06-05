@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Command;
+namespace Phalanx\Bia\Tests\Unit\Command;
 
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Archon\Console\Output\TerminalEnvironment;
-use Phalanx\Dory\Command\DoctorCommand;
-use Phalanx\Dory\Runtime\DoryConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Console\Console\Output\TerminalEnvironment;
+use Phalanx\Bia\Command\DoctorCommand;
+use Phalanx\Bia\Runtime\BiaConfig;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -63,13 +63,13 @@ final class DoctorCommandTest extends TestCase
         rewind($stream);
         $output = stream_get_contents($stream);
 
-        self::assertStringContainsString('Dory config', $output);
+        self::assertStringContainsString('Bia config', $output);
     }
 
     #[Test]
     public function reports_invalid_config(): void
     {
-        $config = new DoryConfig(scriptTimeout: 0.0);
+        $config = new BiaConfig(scriptTimeout: 0.0);
         [$scope, $stream] = $this->buildScope($config);
         $command = new DoctorCommand();
         $command($scope);
@@ -78,15 +78,15 @@ final class DoctorCommandTest extends TestCase
         $output = stream_get_contents($stream);
 
         self::assertStringContainsString('[fail]', $output);
-        self::assertStringContainsString('Dory config', $output);
+        self::assertStringContainsString('Bia config', $output);
     }
 
     /**
      * @return array{CommandContext, resource}
      */
-    private function buildScope(?DoryConfig $config = null): array
+    private function buildScope(?BiaConfig $config = null): array
     {
-        $config ??= new DoryConfig();
+        $config ??= new BiaConfig();
         $stream = fopen('php://memory', 'rw');
         self::assertIsResource($stream);
 
@@ -97,7 +97,7 @@ final class DoctorCommandTest extends TestCase
         $scope->method('service')->willReturnCallback(
             static fn(string $type) => match ($type) {
                 StreamOutput::class => $output,
-                DoryConfig::class => $config,
+                BiaConfig::class => $config,
                 default => throw new \RuntimeException('Unexpected service: ' . $type),
             },
         );

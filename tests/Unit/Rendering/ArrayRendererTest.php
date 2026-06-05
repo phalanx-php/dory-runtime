@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Rendering;
+namespace Phalanx\Bia\Tests\Unit\Rendering;
 
-use Phalanx\Archon\Console\Style\Theme;
-use Phalanx\Archon\Console\Widget\Table;
-use Phalanx\Dory\Rendering\ArrayRenderer;
-use Phalanx\Dory\Tests\Fixtures\BufferSink;
+use Phalanx\Console\Console\Style\Theme;
+use Phalanx\Console\Console\Widget\Table;
+use Phalanx\Bia\Rendering\ArrayRenderer;
+use Phalanx\Bia\Tests\Fixtures\BufferSink;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

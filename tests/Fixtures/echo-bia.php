@@ -2,6 +2,6 @@
 
 declare(strict_types=1);
 
-dory()->println('leonidas');
+bia()->println('leonidas');
 
 return 0;

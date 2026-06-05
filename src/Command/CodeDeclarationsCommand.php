@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\Arg;
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Command\Opt;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Dory\Code\CodeParser;
-use Phalanx\Dory\Code\DeclarationQuery;
-use Phalanx\Dory\Code\DeclarationRecord;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Bia\Code\CodeParser;
+use Phalanx\Bia\Code\DeclarationQuery;
+use Phalanx\Bia\Code\DeclarationRecord;
 use Phalanx\Task\Scopeable;
 
 class CodeDeclarationsCommand implements Scopeable, DescribesCommand
@@ -67,8 +67,8 @@ class CodeDeclarationsCommand implements Scopeable, DescribesCommand
                 Opt::flag('json', '', 'Emit JSON output'),
             ],
             examples: [
-                'dory code declarations --kind=class',
-                'dory code declarations app --fqn=App\\Example::run',
+                'bia code declarations --kind=class',
+                'bia code declarations app --fqn=App\\Example::run',
             ],
         );
     }

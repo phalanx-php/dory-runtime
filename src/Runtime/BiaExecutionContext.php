@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
 use Closure;
 use Phalanx\Cancellation\Cancelled;
 use Phalanx\Concurrency\SettlementBag;
-use Phalanx\Dory\Orchestration\AttemptBuilder;
-use Phalanx\Dory\Rendering\EchoSink;
-use Phalanx\Dory\Rendering\OutputSink;
-use Phalanx\Dory\Rendering\ValueRendererPipeline;
-use Phalanx\Dory\Scoped\ScopedCode;
-use Phalanx\Dory\Scoped\ScopedFiles;
-use Phalanx\Dory\Scoped\ScopedHttpClient;
+use Phalanx\Bia\Orchestration\AttemptBuilder;
+use Phalanx\Bia\Rendering\EchoSink;
+use Phalanx\Bia\Rendering\OutputSink;
+use Phalanx\Bia\Rendering\ValueRendererPipeline;
+use Phalanx\Bia\Scoped\ScopedCode;
+use Phalanx\Bia\Scoped\ScopedFiles;
+use Phalanx\Bia\Scoped\ScopedHttpClient;
 use Phalanx\Scope\ExecutionScope;
 use Phalanx\Support\ExecutionScopeDelegate;
 use Phalanx\Task\Executable;
 use Phalanx\Task\Scopeable;
 use Throwable;
 
-final class DoryExecutionContext implements ScriptContext
+final class BiaExecutionContext implements ScriptContext
 {
     use ExecutionScopeDelegate;
 
@@ -52,7 +52,7 @@ final class DoryExecutionContext implements ScriptContext
     public function __construct(
         private ExecutionScope $inner,
         private(set) string $scriptPath,
-        private(set) DoryConfig $config,
+        private(set) BiaConfig $config,
     ) {
     }
 
@@ -139,7 +139,7 @@ final class DoryExecutionContext implements ScriptContext
         return self::wrapClosureFor($task, $this->scriptPath, $this->config);
     }
 
-    private static function wrapClosureFor(Closure $task, string $scriptPath, DoryConfig $config): Closure
+    private static function wrapClosureFor(Closure $task, string $scriptPath, BiaConfig $config): Closure
     {
         return static function (ExecutionScope $scope) use ($task, $scriptPath, $config): mixed {
             $context = new self($scope, $scriptPath, $config);

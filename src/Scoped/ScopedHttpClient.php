@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Scoped;
+namespace Phalanx\Bia\Scoped;
 
-use Phalanx\Iris\HttpClient;
-use Phalanx\Iris\HttpRequest;
-use Phalanx\Iris\HttpResponse;
-use Phalanx\Iris\HttpStream;
+use Phalanx\HttpClient\HttpClient;
+use Phalanx\HttpClient\HttpRequest;
+use Phalanx\HttpClient\HttpResponse;
+use Phalanx\HttpClient\HttpStream;
 use Phalanx\Scope\ExecutionScope;
 
 class ScopedHttpClient

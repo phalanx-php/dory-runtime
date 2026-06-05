@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Command;
+namespace Phalanx\Bia\Tests\Unit\Command;
 
-use Phalanx\Archon\Command\CommandArgs;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Dory\Command\RunCommand;
-use Phalanx\Dory\Runtime\DoryScriptExecutor;
+use Phalanx\Console\Command\CommandArgs;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Bia\Command\RunCommand;
+use Phalanx\Bia\Runtime\BiaScriptExecutor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -18,7 +18,7 @@ final class RunCommandTest extends TestCase
     public function throws_when_script_does_not_exist(): void
     {
         $scope = $this->buildScope('/nonexistent/thermopylae/script.php');
-        $command = new RunCommand(new DoryScriptExecutor());
+        $command = new RunCommand(new BiaScriptExecutor());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Script not found');
@@ -30,7 +30,7 @@ final class RunCommandTest extends TestCase
     public function throws_for_relative_nonexistent_path(): void
     {
         $scope = $this->buildScope('no-such-directory/olympus.php');
-        $command = new RunCommand(new DoryScriptExecutor());
+        $command = new RunCommand(new BiaScriptExecutor());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Script not found');

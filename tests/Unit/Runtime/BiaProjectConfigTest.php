@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Runtime;
+namespace Phalanx\Bia\Tests\Unit\Runtime;
 
-use Phalanx\Dory\Runtime\DoryProjectConfig;
-use Phalanx\Dory\Tests\Fixtures\TemporaryDirectoryTrait;
+use Phalanx\Bia\Runtime\BiaProjectConfig;
+use Phalanx\Bia\Tests\Fixtures\TemporaryDirectoryTrait;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-final class DoryProjectConfigTest extends TestCase
+final class BiaProjectConfigTest extends TestCase
 {
     use TemporaryDirectoryTrait;
 
@@ -24,14 +24,14 @@ final class DoryProjectConfigTest extends TestCase
     {
         $dir = $this->makeTempDir();
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([], $config->contextOverlay());
         self::assertNull($config->projectRoot);
     }
 
     #[Test]
-    public function discover_reads_extra_dory_section(): void
+    public function discover_reads_extra_bia_section(): void
     {
         $dir = $this->makeTempDir();
 
@@ -41,13 +41,13 @@ final class DoryProjectConfigTest extends TestCase
             'verbose' => true,
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame($dir, $config->projectRoot);
         self::assertSame([
-            'DORY_SCRIPT_TIMEOUT' => 120,
-            'DORY_MAX_CONCURRENCY' => 25,
-            'DORY_VERBOSE' => true,
+            'BIA_SCRIPT_TIMEOUT' => 120,
+            'BIA_MAX_CONCURRENCY' => 25,
+            'BIA_VERBOSE' => true,
         ], $config->contextOverlay());
     }
 
@@ -60,10 +60,10 @@ final class DoryProjectConfigTest extends TestCase
 
         $this->writeComposerJson($parent, ['timeout' => 90]);
 
-        $config = DoryProjectConfig::discover($child);
+        $config = BiaProjectConfig::discover($child);
 
         self::assertSame($parent, $config->projectRoot);
-        self::assertSame(['DORY_SCRIPT_TIMEOUT' => 90], $config->contextOverlay());
+        self::assertSame(['BIA_SCRIPT_TIMEOUT' => 90], $config->contextOverlay());
     }
 
     #[Test]
@@ -78,7 +78,7 @@ final class DoryProjectConfigTest extends TestCase
             ],
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([
             'PHALANX_HOST' => '127.0.0.1',
@@ -96,10 +96,10 @@ final class DoryProjectConfigTest extends TestCase
             'serve' => ['port' => 9000],
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([
-            'DORY_SCRIPT_TIMEOUT' => 60,
+            'BIA_SCRIPT_TIMEOUT' => 60,
             'PHALANX_PORT' => 9000,
         ], $config->contextOverlay());
     }
@@ -114,14 +114,14 @@ final class DoryProjectConfigTest extends TestCase
             'custom_thing' => 'ignored',
             'serve' => [
                 'port' => 9000,
-                'mode' => 'stoa',
+                'mode' => 'http',
             ],
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([
-            'DORY_SCRIPT_TIMEOUT' => 60,
+            'BIA_SCRIPT_TIMEOUT' => 60,
             'PHALANX_PORT' => 9000,
         ], $config->contextOverlay());
     }
@@ -134,15 +134,15 @@ final class DoryProjectConfigTest extends TestCase
         $this->writeComposerJson($dir, [
             'serve' => [
                 'host' => '0.0.0.0',
-                'mode' => 'stoa',
+                'mode' => 'http',
             ],
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([
             'host' => '0.0.0.0',
-            'mode' => 'stoa',
+            'mode' => 'http',
         ], $config->section('serve'));
     }
 
@@ -153,14 +153,14 @@ final class DoryProjectConfigTest extends TestCase
 
         $this->writeComposerJson($dir, ['timeout' => 30]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([], $config->section('serve'));
         self::assertSame([], $config->section('nonexistent'));
     }
 
     #[Test]
-    public function discover_handles_missing_extra_dory(): void
+    public function discover_handles_missing_extra_bia(): void
     {
         $dir = $this->makeTempDir();
 
@@ -168,7 +168,7 @@ final class DoryProjectConfigTest extends TestCase
             'name' => 'test/project',
         ]));
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame($dir, $config->projectRoot);
         self::assertSame([], $config->contextOverlay());
@@ -181,23 +181,23 @@ final class DoryProjectConfigTest extends TestCase
 
         file_put_contents($dir . '/composer.json', '{broken');
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame($dir, $config->projectRoot);
         self::assertSame([], $config->contextOverlay());
     }
 
     #[Test]
-    public function discover_handles_scalar_extra_dory(): void
+    public function discover_handles_scalar_extra_bia(): void
     {
         $dir = $this->makeTempDir();
 
         file_put_contents($dir . '/composer.json', json_encode([
             'name' => 'test/project',
-            'extra' => ['dory' => 'not-an-array'],
+            'extra' => ['bia' => 'not-an-array'],
         ]));
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame($dir, $config->projectRoot);
         self::assertSame([], $config->contextOverlay());
@@ -210,7 +210,7 @@ final class DoryProjectConfigTest extends TestCase
 
         $this->writeComposerJson($dir, ['timeout' => 60]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
         self::assertSame([], $config->section('timeout'));
     }
@@ -225,18 +225,18 @@ final class DoryProjectConfigTest extends TestCase
             'verbose' => 'true',
         ]);
 
-        $config = DoryProjectConfig::discover($dir);
+        $config = BiaProjectConfig::discover($dir);
 
-        self::assertSame('120', $config->contextOverlay()['DORY_SCRIPT_TIMEOUT']);
-        self::assertSame('true', $config->contextOverlay()['DORY_VERBOSE']);
+        self::assertSame('120', $config->contextOverlay()['BIA_SCRIPT_TIMEOUT']);
+        self::assertSame('true', $config->contextOverlay()['BIA_VERBOSE']);
     }
 
-    /** @param array<string, mixed> $doryConfig */
-    private function writeComposerJson(string $dir, array $doryConfig): void
+    /** @param array<string, mixed> $biaConfig */
+    private function writeComposerJson(string $dir, array $biaConfig): void
     {
         file_put_contents($dir . '/composer.json', json_encode([
             'name' => 'test/project',
-            'extra' => ['dory' => $doryConfig],
+            'extra' => ['bia' => $biaConfig],
         ]));
     }
 }

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Command;
+namespace Phalanx\Bia\Tests\Unit\Command;
 
-use Phalanx\Archon\Command\CommandArgs;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\CommandOptions;
-use Phalanx\Archon\Console\Output\StreamOutput;
-use Phalanx\Archon\Console\Output\TerminalEnvironment;
-use Phalanx\Dory\Command\InitCommand;
+use Phalanx\Console\Command\CommandArgs;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\CommandOptions;
+use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Console\Console\Output\TerminalEnvironment;
+use Phalanx\Bia\Command\InitCommand;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +19,7 @@ final class InitCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->tempDir = sys_get_temp_dir() . '/dory-init-test-' . uniqid('', true);
+        $this->tempDir = sys_get_temp_dir() . '/bia-init-test-' . uniqid('', true);
     }
 
     protected function tearDown(): void

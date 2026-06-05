@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Command;
+namespace Phalanx\Bia\Tests\Unit\Command;
 
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\CommandOptions;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\CommandOptions;
 use Phalanx\Boot\AppContext;
-use Phalanx\Dory\Command\ServeCommand;
-use Phalanx\Dory\Runtime\DoryProjectConfig;
-use Phalanx\Stoa\StoaServerConfig;
+use Phalanx\Bia\Command\ServeCommand;
+use Phalanx\Bia\Runtime\BiaProjectConfig;
+use Phalanx\Http\HttpServerConfig;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -17,7 +17,7 @@ use ReflectionMethod;
 final class ServeCommandTest extends TestCase
 {
     #[Test]
-    public function empty_env_preserves_stoa_server_defaults(): void
+    public function empty_env_preserves_http_server_defaults(): void
     {
         $config = self::serverConfig($this->scope(env: []));
 
@@ -26,7 +26,7 @@ final class ServeCommandTest extends TestCase
     }
 
     #[Test]
-    public function env_values_feed_stoa_server_config(): void
+    public function env_values_feed_http_server_config(): void
     {
         $config = self::serverConfig($this->scope(env: [
             'host' => '127.0.0.1',
@@ -38,7 +38,7 @@ final class ServeCommandTest extends TestCase
     }
 
     #[Test]
-    public function phalanx_env_values_feed_stoa_server_config(): void
+    public function phalanx_env_values_feed_http_server_config(): void
     {
         $config = self::serverConfig($this->scope(env: [
             'PHALANX_HOST' => '10.0.0.1',
@@ -107,12 +107,12 @@ final class ServeCommandTest extends TestCase
     }
 
     #[Test]
-    public function command_config_exposes_explicit_stoa_mode(): void
+    public function command_config_exposes_explicit_http_mode(): void
     {
         $options = ServeCommand::commandConfig()->options;
         $names = array_map(static fn($option): string => $option->name, $options);
 
-        self::assertContains('stoa', $names);
+        self::assertContains('http', $names);
     }
 
     /**
@@ -128,7 +128,7 @@ final class ServeCommandTest extends TestCase
         $scope->method('service')->willReturnCallback(
             static fn(string $type) => match ($type) {
                 AppContext::class => new AppContext($env),
-                DoryProjectConfig::class => new DoryProjectConfig([], null),
+                BiaProjectConfig::class => new BiaProjectConfig([], null),
                 default => throw new \RuntimeException('Unexpected service: ' . $type),
             },
         );
@@ -136,7 +136,7 @@ final class ServeCommandTest extends TestCase
         return $scope;
     }
 
-    private static function serverConfig(CommandContext $scope): StoaServerConfig
+    private static function serverConfig(CommandContext $scope): HttpServerConfig
     {
         $method = new ReflectionMethod(ServeCommand::class, 'serverConfig');
 

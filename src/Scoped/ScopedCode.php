@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Scoped;
+namespace Phalanx\Bia\Scoped;
 
-use Phalanx\Dory\Code\CodeParser;
-use Phalanx\Dory\Code\CodeProjectIndex;
-use Phalanx\Dory\Code\DeclarationIndex;
-use Phalanx\Dory\Code\DeclarationQuery;
-use Phalanx\Dory\Code\DeclarationQueryResult;
-use Phalanx\Dory\Code\NativeCodeParser;
-use Phalanx\Dory\Code\NodeQuery;
-use Phalanx\Dory\Code\NodeQueryResult;
-use Phalanx\Dory\Code\ParseResult;
-use Phalanx\Dory\Code\ReferenceQuery;
-use Phalanx\Dory\Code\ReferenceQueryResult;
-use Phalanx\Dory\Code\TokenIndex;
-use Phalanx\Dory\Code\TokenQuery;
-use Phalanx\Dory\Code\TokenQueryResult;
+use Phalanx\Bia\Code\CodeParser;
+use Phalanx\Bia\Code\CodeProjectIndex;
+use Phalanx\Bia\Code\DeclarationIndex;
+use Phalanx\Bia\Code\DeclarationQuery;
+use Phalanx\Bia\Code\DeclarationQueryResult;
+use Phalanx\Bia\Code\NativeCodeParser;
+use Phalanx\Bia\Code\NodeQuery;
+use Phalanx\Bia\Code\NodeQueryResult;
+use Phalanx\Bia\Code\ParseResult;
+use Phalanx\Bia\Code\ReferenceQuery;
+use Phalanx\Bia\Code\ReferenceQueryResult;
+use Phalanx\Bia\Code\TokenIndex;
+use Phalanx\Bia\Code\TokenQuery;
+use Phalanx\Bia\Code\TokenQueryResult;
 use Phalanx\Scope\ExecutionScope;
 
 class ScopedCode

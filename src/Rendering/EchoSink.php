@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Rendering;
+namespace Phalanx\Bia\Rendering;
 
 class EchoSink implements OutputSink
 {

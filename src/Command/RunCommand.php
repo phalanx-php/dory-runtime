@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\Arg;
-use Phalanx\Archon\Command\CommandConfig;
-use Phalanx\Archon\Command\CommandContext;
-use Phalanx\Archon\Command\DescribesCommand;
-use Phalanx\Archon\Command\Opt;
-use Phalanx\Dory\Exception\ScriptFault;
-use Phalanx\Dory\Runtime\DoryConfig;
-use Phalanx\Dory\Runtime\DoryScriptExecutor;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
+use Phalanx\Bia\Exception\ScriptFault;
+use Phalanx\Bia\Runtime\BiaConfig;
+use Phalanx\Bia\Runtime\BiaScriptExecutor;
 use Phalanx\Task\Scopeable;
 use Throwable;
 
 class RunCommand implements Scopeable, DescribesCommand
 {
     public function __construct(
-        private DoryScriptExecutor $scripts,
+        private BiaScriptExecutor $scripts,
     ) {
     }
 
@@ -41,7 +41,7 @@ class RunCommand implements Scopeable, DescribesCommand
     public static function commandConfig(): CommandConfig
     {
         return new CommandConfig(
-            description: 'Run a Dory script or inline PHP code',
+            description: 'Run a Bia script or inline PHP code',
             arguments: [
                 Arg::required('script', 'Script path or inline PHP code'),
             ],
@@ -50,10 +50,10 @@ class RunCommand implements Scopeable, DescribesCommand
                 Opt::value('timeout', 't', 'Script timeout in seconds', '30'),
             ],
             examples: [
-                'dory run deploy.php',
-                "dory run '1 + 1'",
-                'dory run sync.php --timeout=120',
-                'dory r migrate.php -v',
+                'bia run deploy.php',
+                "bia run '1 + 1'",
+                'bia run sync.php --timeout=120',
+                'bia r migrate.php -v',
             ],
             aliases: ['r'],
         );
@@ -85,7 +85,7 @@ class RunCommand implements Scopeable, DescribesCommand
         $isExpression = !str_contains($code, ';') && !str_contains($code, '{');
 
         if ($isExpression) {
-            $body = "\$__r = ({$code});\nif (\$__r !== null) { dory()->dump(\$__r); }\nreturn 0;";
+            $body = "\$__r = ({$code});\nif (\$__r !== null) { bia()->dump(\$__r); }\nreturn 0;";
         } else {
             $body = str_ends_with($code, ';') || str_ends_with($code, '}') || str_ends_with($code, '?>')
                 ? $code
@@ -94,7 +94,7 @@ class RunCommand implements Scopeable, DescribesCommand
         }
 
         $php = "<?php declare(strict_types=1);\n{$body}\n";
-        $tmp = tempnam(sys_get_temp_dir(), 'dory_');
+        $tmp = tempnam(sys_get_temp_dir(), 'bia_');
         if ($tmp === false) {
             throw new \RuntimeException('Failed to create inline script file.');
         }
@@ -113,12 +113,12 @@ class RunCommand implements Scopeable, DescribesCommand
         return $path;
     }
 
-    private static function configFor(CommandContext $ctx): DoryConfig
+    private static function configFor(CommandContext $ctx): BiaConfig
     {
-        $base = $ctx->service(DoryConfig::class);
+        $base = $ctx->service(BiaConfig::class);
         $timeout = $ctx->options->get('timeout');
 
-        return new DoryConfig(
+        return new BiaConfig(
             scriptTimeout: $timeout === null ? $base->scriptTimeout : (float) $timeout,
             maxConcurrency: $base->maxConcurrency,
             verbose: $ctx->options->flag('verbose') || $base->verbose,

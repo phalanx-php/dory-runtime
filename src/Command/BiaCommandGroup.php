@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Command;
+namespace Phalanx\Bia\Command;
 
-use Phalanx\Archon\Command\CommandGroup;
+use Phalanx\Console\Command\CommandGroup;
 
-class DoryCommandGroup
+class BiaCommandGroup
 {
     public static function commands(): CommandGroup
     {
@@ -21,10 +21,10 @@ class DoryCommandGroup
             'serve' => ServeCommand::class,
         ];
 
-        if (class_exists(\Phalanx\DoryBin\Command\BuildCommandGroup::class)) {
-            $commands['build'] = \Phalanx\DoryBin\Command\BuildCommandGroup::commands();
+        if (class_exists(\Phalanx\BiaBin\Command\BuildCommandGroup::class)) {
+            $commands['build'] = \Phalanx\BiaBin\Command\BuildCommandGroup::commands();
         }
 
-        return CommandGroup::of($commands, 'dory');
+        return CommandGroup::of($commands, 'bia');
     }
 }

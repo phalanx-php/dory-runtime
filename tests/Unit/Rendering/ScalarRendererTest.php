@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Rendering;
+namespace Phalanx\Bia\Tests\Unit\Rendering;
 
-use Phalanx\Dory\Rendering\ScalarRenderer;
-use Phalanx\Dory\Tests\Fixtures\BufferSink;
+use Phalanx\Bia\Rendering\ScalarRenderer;
+use Phalanx\Bia\Tests\Fixtures\BufferSink;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

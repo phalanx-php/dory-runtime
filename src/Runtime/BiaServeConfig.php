@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Runtime;
+namespace Phalanx\Bia\Runtime;
 
-final readonly class DoryServeConfig
+final readonly class BiaServeConfig
 {
     public function __construct(
         public string $scriptPath,
-        public DoryConfig $doryConfig,
+        public BiaConfig $biaConfig,
     ) {
     }
 }

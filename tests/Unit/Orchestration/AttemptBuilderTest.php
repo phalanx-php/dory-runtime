@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Phalanx\Dory\Tests\Unit\Orchestration;
+namespace Phalanx\Bia\Tests\Unit\Orchestration;
 
 use Closure;
 use Phalanx\Cancellation\Cancelled;
 use Phalanx\Concurrency\RetryPolicy;
-use Phalanx\Dory\Orchestration\AttemptBuilder;
+use Phalanx\Bia\Orchestration\AttemptBuilder;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
