@@ -21,10 +21,6 @@ class BiaCommandGroup
             'serve' => ServeCommand::class,
         ];
 
-        if (class_exists(\Phalanx\BiaBin\Command\BuildCommandGroup::class)) {
-            $commands['build'] = \Phalanx\BiaBin\Command\BuildCommandGroup::commands();
-        }
-
         return CommandGroup::of($commands, 'bia');
     }
 }

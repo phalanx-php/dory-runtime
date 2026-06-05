@@ -6,6 +6,7 @@ namespace Phalanx\Bia\Runtime;
 
 use Phalanx\Bia\Rendering\OutputSink;
 use Phalanx\Bia\Rendering\ValueRendererPipeline;
+use Phalanx\Mark\Mark;
 use Phalanx\Scope\ExecutionScope;
 use RuntimeException;
 
@@ -21,7 +22,7 @@ final class BiaScriptExecutor
         $config ??= $scope->service(BiaConfig::class);
 
         $result = $scope->timeout(
-            $config->scriptTimeout,
+            Mark::s($config->scriptTimeout),
             static function (ExecutionScope $scriptScope) use ($resolved, $config): mixed {
                 return ScriptRunner::execute(new BiaExecutionContext(
                     inner: $scriptScope,

@@ -23,6 +23,7 @@
     "require": {
         "php": "^8.4",
         "phalanx-php/runtime": "^0.7",
+        "phalanx-php/mark": "^0.7",
         "phalanx-php/console": "^0.7",
         "phalanx-php/network": "^0.7",
         "phalanx-php/config": "^0.7",
@@ -40,9 +41,6 @@
         "psr/http-message": "^2.0",
         "symfony/runtime": "^7.0",
         "symfony/var-dumper": "^7.0"
-    },
-    "suggest": {
-        "phalanx-php/biabin": "For static binary compilation via SPC"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.0"

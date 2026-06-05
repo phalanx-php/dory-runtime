@@ -35,10 +35,6 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
             new \Phalanx\WebSocket\WsServiceBundle(),
         ];
 
-        if (class_exists(\Phalanx\BiaBin\BiaBinServiceBundle::class)) {
-            $providers[] = new \Phalanx\BiaBin\BiaBinServiceBundle();
-        }
-
         exit(
             \Phalanx\Console\Application\Console::starting($context)
                 ->providers(...$providers)
@@ -92,10 +88,6 @@ return static fn(array $context): \Closure => static function () use ($context):
         new NetworkServiceBundle(),
         new WsServiceBundle(),
     ];
-
-    if (class_exists(\Phalanx\BiaBin\BiaBinServiceBundle::class)) {
-        $providers[] = new \Phalanx\BiaBin\BiaBinServiceBundle();
-    }
 
     return Console::starting($merged)
         ->providers(...$providers)
