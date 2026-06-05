@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Unit\Runtime;
 
+use Phalanx\Config\ValidationContext;
+use Phalanx\DevServer\DevServer;
+use Phalanx\Filesystem\FilesystemServiceBundle;
+use Phalanx\HttpClient\HttpServiceBundle;
 use Phalanx\Network\NetworkConfig;
 use Phalanx\Network\NetworkServiceBundle;
-use Phalanx\Filesystem\FilesystemServiceBundle;
 use Phalanx\WebSocket\Client\WsClientConfig;
 use Phalanx\WebSocket\WsServiceBundle;
 use Phalanx\Worker\WorkerServiceBundle;
-use Phalanx\HttpClient\HttpServiceBundle;
-use Phalanx\DevServer\DevServer;
-use Phalanx\Config\ValidationContext;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -34,13 +34,13 @@ final class ModuleAvailabilityTest extends TestCase
     }
 
     #[Test]
-    public function skopos_is_class_available(): void
+    public function dev_server_is_class_available(): void
     {
         self::assertTrue(class_exists(DevServer::class));
     }
 
     #[Test]
-    public function argos_config_passes_validation_with_defaults(): void
+    public function network_config_passes_validation_with_defaults(): void
     {
         $config = new NetworkConfig();
 
@@ -49,7 +49,7 @@ final class ModuleAvailabilityTest extends TestCase
     }
 
     #[Test]
-    public function hermes_client_config_constructs_with_defaults(): void
+    public function websocket_client_config_constructs_with_defaults(): void
     {
         $config = WsClientConfig::default();
 

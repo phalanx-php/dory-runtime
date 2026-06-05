@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace Phalanx\Bia\Tests\Unit\Orchestration;
 
 use Closure;
-use Phalanx\Cancellation\Cancelled;
-use Phalanx\Concurrency\RetryPolicy;
 use Phalanx\Bia\Orchestration\AttemptBuilder;
+use Phalanx\Cancellation\Cancelled;
+use Phalanx\Mark\Mark;
+use Phalanx\Recovery\RecoveryPlan;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +33,10 @@ final class AttemptBuilderTest extends TestCase
         $scope = $this->createMock(ExecutionScope::class);
         $scope->expects(self::once())
             ->method('timeout')
-            ->with(5.0, self::isInstanceOf(Closure::class))
+            ->with(
+                self::callback(static fn(Mark $duration): bool => $duration->toSeconds() === 5.0),
+                self::isInstanceOf(Closure::class),
+            )
             ->willReturn('poseidon');
 
         $scope->method('execute')
@@ -50,7 +54,7 @@ final class AttemptBuilderTest extends TestCase
         $scope = $this->createMock(ExecutionScope::class);
         $scope->expects(self::once())
             ->method('retry')
-            ->with(self::isInstanceOf(Closure::class), self::isInstanceOf(RetryPolicy::class))
+            ->with(self::isInstanceOf(Closure::class), self::isInstanceOf(RecoveryPlan::class))
             ->willReturn('demeter');
 
         $scope->method('execute')
@@ -152,10 +156,10 @@ final class AttemptBuilderTest extends TestCase
             ->willReturnCallback(static fn(string $key, Closure $task): mixed => $task());
 
         $scope->method('timeout')
-            ->willReturnCallback(static fn(float $seconds, Closure $task): mixed => $task());
+            ->willReturnCallback(static fn(Mark $duration, Closure $task): mixed => $task());
 
         $scope->method('retry')
-            ->willReturnCallback(static function (Closure $task, RetryPolicy $policy): mixed {
+            ->willReturnCallback(static function (Closure $task, RecoveryPlan $plan): mixed {
                 try {
                     return $task();
                 } catch (RuntimeException) {
@@ -198,13 +202,13 @@ final class AttemptBuilderTest extends TestCase
             });
 
         $scope->method('timeout')
-            ->willReturnCallback(static function (float $seconds, Closure $task) use (&$callOrder): mixed {
+            ->willReturnCallback(static function (Mark $duration, Closure $task) use (&$callOrder): mixed {
                 $callOrder[] = 'timeout';
                 return $task();
             });
 
         $scope->method('retry')
-            ->willReturnCallback(static function (Closure $task, RetryPolicy $policy) use (&$callOrder): mixed {
+            ->willReturnCallback(static function (Closure $task, RecoveryPlan $plan) use (&$callOrder): mixed {
                 $callOrder[] = 'retry';
                 return $task();
             });

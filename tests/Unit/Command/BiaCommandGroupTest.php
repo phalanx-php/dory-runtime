@@ -49,7 +49,7 @@ final class BiaCommandGroupTest extends TestCase
     }
 
     #[Test]
-    public function registers_serve_when_skopos_available(): void
+    public function registers_serve_when_dev_server_available(): void
     {
         $group = BiaCommandGroup::commands();
         $commands = $group->commands();
