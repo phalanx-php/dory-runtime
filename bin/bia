@@ -29,14 +29,14 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
 
         $providers = [
             new \Phalanx\Bia\Runtime\BiaServiceBundle(),
-            new \Phalanx\HttpClient\HttpServiceBundle(),
+            new \Phalanx\HttpClient\Bundle(),
             new \Phalanx\Filesystem\FilesystemServiceBundle(),
             new \Phalanx\Network\NetworkServiceBundle(),
-            new \Phalanx\WebSocket\WsServiceBundle(),
+            new \Phalanx\WebSocket\Bundle(),
         ];
 
         exit(
-            \Phalanx\Console\Application\Console::starting($context)
+            \Phalanx\Console\Facade::starting($context)
                 ->providers(...$providers)
                 ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
                 ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
@@ -53,6 +53,10 @@ if (!is_file($autoload)) {
 }
 
 if (!is_file($autoload)) {
+    $autoload = dirname(__DIR__, 3) . '/phalanx/vendor/autoload_runtime.php';
+}
+
+if (!is_file($autoload)) {
     $autoload = dirname(__DIR__, 4) . '/vendor/autoload_runtime.php';
 }
 
@@ -61,38 +65,38 @@ if (!is_file($autoload)) {
     exit(1);
 }
 
-require $autoload;
+$loader = require dirname($autoload) . '/autoload.php';
 
-use Phalanx\Console\Application\Console;
-use Phalanx\Network\NetworkServiceBundle;
-use Phalanx\Bia\Command\BiaCommandGroup;
-use Phalanx\Bia\Console\ScriptFaultRenderer;
-use Phalanx\Bia\Runtime\BiaProjectConfig;
-use Phalanx\Bia\Runtime\BiaServiceBundle;
-use Phalanx\Filesystem\FilesystemServiceBundle;
-use Phalanx\WebSocket\WsServiceBundle;
-use Phalanx\HttpClient\HttpServiceBundle;
+$loader->addPsr4('Phalanx\\Bia\\', dirname(__DIR__) . '/src/');
+$functionsFile = dirname(__DIR__) . '/src/functions.php';
 
-return static fn(array $context): \Closure => static function () use ($context): int {
-    $projectConfig = BiaProjectConfig::discover(getcwd() ?: '.');
+if (is_file($functionsFile) && !function_exists('bia')) {
+    require $functionsFile;
+}
 
-    $merged = [
+$projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
+
+$context = $_SERVER;
+if ($_ENV && !isset($context['PATH']) && !isset($context['Path'])) {
+    $context += $_ENV;
+}
+
+$providers = [
+    new \Phalanx\Bia\Runtime\BiaServiceBundle(),
+    new \Phalanx\HttpClient\Bundle(),
+    new \Phalanx\Filesystem\FilesystemServiceBundle(),
+    new \Phalanx\Network\NetworkServiceBundle(),
+    new \Phalanx\WebSocket\Bundle(),
+];
+
+exit(
+    \Phalanx\Console\Facade::starting([
         ...$projectConfig->contextOverlay(),
         ...$context,
-    ];
-
-    $providers = [
-        new BiaServiceBundle(),
-        new HttpServiceBundle(),
-        new FilesystemServiceBundle(),
-        new NetworkServiceBundle(),
-        new WsServiceBundle(),
-    ];
-
-    return Console::starting($merged)
+    ])
         ->providers(...$providers)
-        ->commands(BiaCommandGroup::commands())
-        ->withErrorRenderers(new ScriptFaultRenderer())
+        ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
+        ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
         ->default('run')
-        ->run();
-};
+        ->run(array_slice($_SERVER['argv'] ?? [], 1))
+);

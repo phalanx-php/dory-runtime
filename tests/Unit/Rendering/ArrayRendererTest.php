@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Unit\Rendering;
 
-use Phalanx\Console\Console\Style\Theme;
-use Phalanx\Console\Console\Widget\Table;
+use Phalanx\Console\Style\Theme;
+use Phalanx\Console\Widget\Table;
 use Phalanx\Bia\Rendering\ArrayRenderer;
 use Phalanx\Bia\Tests\Fixtures\BufferSink;
 use PHPUnit\Framework\Attributes\Test;

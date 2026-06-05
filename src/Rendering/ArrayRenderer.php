@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Rendering;
 
-use Phalanx\Console\Console\Widget\Table;
+use Phalanx\Console\Widget\Table;
 
 class ArrayRenderer implements ValueRenderer
 {

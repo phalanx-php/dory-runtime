@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace Phalanx\Bia\Console;
 
 use Phalanx\Console\Command\CommandContext;
-use Phalanx\Console\Console\ConsoleErrorRenderer;
-use Phalanx\Console\Console\Output\StreamOutput;
-use Phalanx\Console\Console\Style\Style;
-use Phalanx\Console\Console\Style\Theme;
-use Phalanx\Console\Console\Widget\SourcePreview;
+use Phalanx\Console\ErrorRenderer;
+use Phalanx\Console\Output\StreamOutput;
+use Phalanx\Console\Style\Style;
+use Phalanx\Console\Style\Theme;
+use Phalanx\Console\Widget\SourcePreview;
 use Phalanx\Bia\Exception\ScriptFault;
 use Phalanx\Bia\Runtime\ScriptRunner;
 use Throwable;
 
-final readonly class ScriptFaultRenderer implements ConsoleErrorRenderer
+final readonly class ScriptFaultRenderer implements ErrorRenderer
 {
     private const string MARGIN = '  ';
 

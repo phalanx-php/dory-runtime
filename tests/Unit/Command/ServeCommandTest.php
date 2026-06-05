@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Unit\Command;
 
-use Phalanx\Console\Command\CommandContext;
-use Phalanx\Console\Command\CommandOptions;
-use Phalanx\Boot\AppContext;
 use Phalanx\Bia\Command\ServeCommand;
 use Phalanx\Bia\Runtime\BiaProjectConfig;
-use Phalanx\Http\HttpServerConfig;
+use Phalanx\Boot\AppContext;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\CommandOptions;
+use Phalanx\Http\ServerConfig;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -136,7 +136,7 @@ final class ServeCommandTest extends TestCase
         return $scope;
     }
 
-    private static function serverConfig(CommandContext $scope): HttpServerConfig
+    private static function serverConfig(CommandContext $scope): ServerConfig
     {
         $method = new ReflectionMethod(ServeCommand::class, 'serverConfig');
 

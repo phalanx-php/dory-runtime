@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Command;
 
-use Phalanx\Console\Command\Arg;
-use Phalanx\Console\Command\CommandConfig;
-use Phalanx\Console\Command\CommandContext;
-use Phalanx\Console\Command\DescribesCommand;
-use Phalanx\Console\Command\Opt;
-use Phalanx\Network\NetworkServiceBundle;
-use Phalanx\Boot\AppContext;
 use Phalanx\Bia\Runtime\BiaConfig;
 use Phalanx\Bia\Runtime\BiaExecutionContext;
 use Phalanx\Bia\Runtime\BiaProjectConfig;
@@ -19,16 +12,23 @@ use Phalanx\Bia\Runtime\BiaServeConfig;
 use Phalanx\Bia\Runtime\BiaServeServiceBundle;
 use Phalanx\Bia\Runtime\BiaServiceBundle;
 use Phalanx\Bia\Runtime\ScriptRunner;
+use Phalanx\Boot\AppContext;
+use Phalanx\Console\Command\Arg;
+use Phalanx\Console\Command\CommandConfig;
+use Phalanx\Console\Command\CommandContext;
+use Phalanx\Console\Command\DescribesCommand;
+use Phalanx\Console\Command\Opt;
 use Phalanx\Filesystem\FilesystemServiceBundle;
-use Phalanx\WebSocket\WsServiceBundle;
-use Phalanx\HttpClient\HttpServiceBundle;
-use Phalanx\Scope\ExecutionScope;
+use Phalanx\Http\Application;
+use Phalanx\Http\ApplicationBuilder;
 use Phalanx\Http\RouteGroup;
-use Phalanx\Http\Http;
-use Phalanx\Http\HttpApplication;
-use Phalanx\Http\HttpApplicationBuilder;
-use Phalanx\Http\HttpServerConfig;
+use Phalanx\Http\Server;
+use Phalanx\Http\ServerConfig;
+use Phalanx\HttpClient\Bundle as HttpClientBundle;
+use Phalanx\Network\NetworkServiceBundle;
+use Phalanx\Scope\ExecutionScope;
 use Phalanx\Task\Scopeable;
+use Phalanx\WebSocket\Bundle as WebSocketBundle;
 use RuntimeException;
 
 class ServeCommand implements Scopeable, DescribesCommand
@@ -83,8 +83,8 @@ class ServeCommand implements Scopeable, DescribesCommand
         CommandContext $ctx,
         string $scriptPath,
         BiaConfig $biaConfig,
-        HttpServerConfig $serverConfig,
-    ): HttpApplication {
+        ServerConfig $serverConfig,
+    ): Application {
         $result = null;
 
         /** Suppress bootstrap output so it doesn't leak into the HTTP response. */
@@ -101,32 +101,32 @@ class ServeCommand implements Scopeable, DescribesCommand
             ob_end_clean();
         }
 
-        if ($result instanceof HttpApplication) {
+        if ($result instanceof Application) {
             return $result;
         }
 
-        if ($result instanceof HttpApplicationBuilder) {
+        if ($result instanceof ApplicationBuilder) {
             return $result->withServerConfig($serverConfig)->build();
         }
 
-        throw new RuntimeException('Http serve mode requires the script to return a HttpApplication or HttpApplicationBuilder.');
+        throw new RuntimeException('Http serve mode requires the script to return a Http Application or ApplicationBuilder.');
     }
 
     private static function scriptApplication(
         CommandContext $ctx,
         string $scriptPath,
         BiaConfig $biaConfig,
-        HttpServerConfig $serverConfig,
-    ): HttpApplication {
+        ServerConfig $serverConfig,
+    ): Application {
         $context = $ctx->service(AppContext::class);
 
-        return Http::starting($context->values)
+        return Server::starting($context->values)
             ->providers(
                 new BiaServiceBundle(),
-                new HttpServiceBundle(),
+                new HttpClientBundle(),
                 new FilesystemServiceBundle(),
                 new NetworkServiceBundle(),
-                new WsServiceBundle(),
+                new WebSocketBundle(),
                 new BiaServeServiceBundle(new BiaServeConfig($scriptPath, $biaConfig)),
             )
             ->withServerConfig($serverConfig)
@@ -137,7 +137,7 @@ class ServeCommand implements Scopeable, DescribesCommand
             ->build();
     }
 
-    private static function serverConfig(CommandContext $ctx): HttpServerConfig
+    private static function serverConfig(CommandContext $ctx): ServerConfig
     {
         $values = $ctx->service(AppContext::class)->values;
 
@@ -161,7 +161,7 @@ class ServeCommand implements Scopeable, DescribesCommand
             $values['PHALANX_PORT'] = (int) $port;
         }
 
-        return HttpServerConfig::fromRuntimeOptions($values);
+        return ServerConfig::fromRuntimeOptions($values);
     }
 
     /** @return array{string, int} */

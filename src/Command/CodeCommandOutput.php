@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Command;
 
-use Phalanx\Console\Console\Output\StreamOutput;
+use Phalanx\Console\Output\StreamOutput;
 use Phalanx\Bia\Code\CodePayload;
 use Phalanx\Bia\Code\CodeProjectIndex;
 use Phalanx\Bia\Code\DeclarationQueryResult;

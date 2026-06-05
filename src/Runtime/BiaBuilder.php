@@ -6,14 +6,14 @@ namespace Phalanx\Bia\Runtime;
 
 use Phalanx\Application;
 use Phalanx\ApplicationBuilder;
-use Phalanx\Network\NetworkServiceBundle;
 use Phalanx\Boot\AppContext;
 use Phalanx\Filesystem\FilesystemServiceBundle;
-use Phalanx\WebSocket\WsServiceBundle;
-use Phalanx\HttpClient\HttpServiceBundle;
+use Phalanx\HttpClient\Bundle as HttpClientBundle;
 use Phalanx\Middleware\ServiceTransformationMiddleware;
 use Phalanx\Middleware\TaskMiddleware;
+use Phalanx\Network\NetworkServiceBundle;
 use Phalanx\Service\ServiceBundle;
+use Phalanx\WebSocket\Bundle as WebSocketBundle;
 
 class BiaBuilder
 {
@@ -76,8 +76,8 @@ class BiaBuilder
 
     private function autoDetectModules(): void
     {
-        if (class_exists(HttpServiceBundle::class)) {
-            $this->app->providers(new HttpServiceBundle());
+        if (class_exists(HttpClientBundle::class)) {
+            $this->app->providers(new HttpClientBundle());
         }
 
         if (class_exists(FilesystemServiceBundle::class)) {
@@ -88,8 +88,8 @@ class BiaBuilder
             $this->app->providers(new NetworkServiceBundle());
         }
 
-        if (class_exists(WsServiceBundle::class)) {
-            $this->app->providers(new WsServiceBundle());
+        if (class_exists(WebSocketBundle::class)) {
+            $this->app->providers(new WebSocketBundle());
         }
     }
 }

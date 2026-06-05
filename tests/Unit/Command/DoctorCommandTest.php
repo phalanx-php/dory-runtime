@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Phalanx\Bia\Tests\Unit\Command;
 
 use Phalanx\Console\Command\CommandContext;
-use Phalanx\Console\Console\Output\StreamOutput;
-use Phalanx\Console\Console\Output\TerminalEnvironment;
+use Phalanx\Console\Output\StreamOutput;
+use Phalanx\Console\Output\TerminalEnvironment;
 use Phalanx\Bia\Command\DoctorCommand;
 use Phalanx\Bia\Runtime\BiaConfig;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;

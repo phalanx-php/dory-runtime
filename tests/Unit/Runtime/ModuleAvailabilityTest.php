@@ -7,12 +7,12 @@ namespace Phalanx\Bia\Tests\Unit\Runtime;
 use Phalanx\Config\ValidationContext;
 use Phalanx\DevServer\DevServer;
 use Phalanx\Filesystem\FilesystemServiceBundle;
-use Phalanx\HttpClient\HttpServiceBundle;
+use Phalanx\HttpClient\Bundle as HttpClientBundle;
 use Phalanx\Network\NetworkConfig;
 use Phalanx\Network\NetworkServiceBundle;
-use Phalanx\WebSocket\Client\WsClientConfig;
-use Phalanx\WebSocket\WsServiceBundle;
-use Phalanx\Worker\WorkerServiceBundle;
+use Phalanx\WebSocket\Bundle as WebSocketBundle;
+use Phalanx\WebSocket\Client\Config as WebSocketClientConfig;
+use Phalanx\Worker\Bundle as WorkerBundle;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -22,15 +22,15 @@ final class ModuleAvailabilityTest extends TestCase
     public function auto_registered_module_bundles_exist(): void
     {
         self::assertTrue(class_exists(NetworkServiceBundle::class));
-        self::assertTrue(class_exists(WsServiceBundle::class));
-        self::assertTrue(class_exists(HttpServiceBundle::class));
+        self::assertTrue(class_exists(WebSocketBundle::class));
+        self::assertTrue(class_exists(HttpClientBundle::class));
         self::assertTrue(class_exists(FilesystemServiceBundle::class));
     }
 
     #[Test]
     public function opt_in_module_bundle_exists(): void
     {
-        self::assertTrue(class_exists(WorkerServiceBundle::class));
+        self::assertTrue(class_exists(WorkerBundle::class));
     }
 
     #[Test]
@@ -51,7 +51,7 @@ final class ModuleAvailabilityTest extends TestCase
     #[Test]
     public function websocket_client_config_constructs_with_defaults(): void
     {
-        $config = WsClientConfig::default();
+        $config = WebSocketClientConfig::default();
 
         self::assertIsFloat($config->connectTimeout);
         self::assertGreaterThan(0, $config->connectTimeout);
