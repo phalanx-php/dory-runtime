@@ -36,7 +36,7 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
         ];
 
         exit(
-            \Phalanx\Console\Facade::starting($context)
+            \Phalanx\Console\Console::starting($context)
                 ->providers(...$providers)
                 ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
                 ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
@@ -90,7 +90,7 @@ $providers = [
 ];
 
 exit(
-    \Phalanx\Console\Facade::starting([
+    \Phalanx\Console\Console::starting([
         ...$projectConfig->contextOverlay(),
         ...$context,
     ])
