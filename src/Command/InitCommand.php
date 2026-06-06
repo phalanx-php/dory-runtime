@@ -21,7 +21,7 @@ class InitCommand implements Scopeable, DescribesCommand
 {
     private const string STARTER_SCRIPT = 'script';
 
-    private const string STARTER_COLLAB = 'collab';
+    private const string STARTER_AGENT_HARNESS = 'agent-harness';
 
     /** @var list<string> */
     private const array EXCLUDED_TEMPLATE_NAMES = [
@@ -62,13 +62,13 @@ class InitCommand implements Scopeable, DescribesCommand
         }
 
         $starter = (string) $ctx->options->get('starter', self::STARTER_SCRIPT);
-        if ($starter === self::STARTER_COLLAB) {
-            return $this->createCollabStarter($ctx, $absolute, $output);
+        if ($starter === self::STARTER_AGENT_HARNESS) {
+            return $this->createAgentHarnessStarter($ctx, $absolute, $output);
         }
 
         if ($starter !== self::STARTER_SCRIPT) {
             $output->persist("Unknown starter: {$starter}");
-            $output->persist('Available starters: script, collab');
+            $output->persist('Available starters: script, agent-harness');
             return 1;
         }
 
@@ -100,28 +100,28 @@ class InitCommand implements Scopeable, DescribesCommand
             ],
             options: [
                 Opt::value('name', 'n', 'Script filename', 'hello.php'),
-                Opt::value('starter', '', 'Starter template: script or collab', self::STARTER_SCRIPT),
-                Opt::value('template-path', '', 'Local Collab starter template path'),
+                Opt::value('starter', '', 'Starter template: script or agent-harness', self::STARTER_SCRIPT),
+                Opt::value('template-path', '', 'Local Agent Harness starter template path'),
                 Opt::value('framework-path', '', 'Local phalanx framework path'),
                 Opt::flag('force', 'f', 'Overwrite existing files'),
             ],
             examples: [
                 'bia init my-project',
                 'bia new . --name=sync.php',
-                'bia new my-collab-app --starter=collab',
+                'bia new my-agent-harness --starter=agent-harness',
                 'bia init scripts -f',
             ],
             aliases: ['new'],
         );
     }
 
-    private function createCollabStarter(CommandContext $ctx, string $target, StreamOutput $output): int
+    private function createAgentHarnessStarter(CommandContext $ctx, string $target, StreamOutput $output): int
     {
         $template = $this->pathOption(
             $ctx,
             'template-path',
-            'PHALANX_COLLAB_STARTER_PATH',
-            dirname(__DIR__, 4) . '/starter-kits/collab-starter',
+            'PHALANX_AGENT_HARNESS_PATH',
+            dirname(__DIR__, 4) . '/starter-kits/agent-harness',
         );
         $framework = $this->pathOption(
             $ctx,
@@ -131,7 +131,7 @@ class InitCommand implements Scopeable, DescribesCommand
         );
 
         if (!is_dir($template)) {
-            $output->persist("Collab starter template not found: {$template}");
+            $output->persist("Agent Harness starter template not found: {$template}");
             return 1;
         }
 
@@ -167,7 +167,7 @@ class InitCommand implements Scopeable, DescribesCommand
 
         $this->rewriteComposerPath($target, $framework);
 
-        $output->persist("Created Collab starter: {$target}");
+        $output->persist("Created Agent Harness starter: {$target}");
         $output->persist('');
         $output->persist('Run it with:');
         $output->persist('  composer install');

@@ -109,14 +109,14 @@ final class InitCommandTest extends TestCase
     }
 
     #[Test]
-    public function creates_collab_starter_from_template_path(): void
+    public function creates_agent_harness_starter_from_template_path(): void
     {
-        $template = $this->createCollabTemplate();
+        $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
         $target = $this->tempDir . '/project';
 
         [$scope, $stream] = $this->buildScopeWithStream($target, [
-            'starter' => 'collab',
+            'starter' => 'agent-harness',
             'template-path' => $template,
             'framework-path' => $framework,
         ]);
@@ -125,7 +125,7 @@ final class InitCommandTest extends TestCase
 
         self::assertSame(0, $result);
         self::assertFileExists($target . '/composer.json');
-        self::assertFileExists($target . '/app/Collab.php');
+        self::assertFileExists($target . '/app/AgentHarness.php');
         self::assertFileExists($target . '/config/phalanx.toml');
         self::assertFileDoesNotExist($target . '/composer.lock');
         self::assertDirectoryDoesNotExist($target . '/vendor');
@@ -137,23 +137,23 @@ final class InitCommandTest extends TestCase
 
         rewind($stream);
         $output = stream_get_contents($stream);
-        self::assertStringContainsString('Created Collab starter', $output);
+        self::assertStringContainsString('Created Agent Harness starter', $output);
         self::assertStringContainsString('composer test', $output);
     }
 
     #[Test]
-    public function does_not_overwrite_collab_starter_files_without_force(): void
+    public function does_not_overwrite_agent_harness_starter_files_without_force(): void
     {
-        $template = $this->createCollabTemplate();
+        $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
         $target = $this->tempDir . '/project';
         $existing = '<?php echo "existing";';
 
         mkdir($target . '/app', 0755, recursive: true);
-        file_put_contents($target . '/app/Collab.php', $existing);
+        file_put_contents($target . '/app/AgentHarness.php', $existing);
 
         [$scope, $stream] = $this->buildScopeWithStream($target, [
-            'starter' => 'collab',
+            'starter' => 'agent-harness',
             'template-path' => $template,
             'framework-path' => $framework,
         ]);
@@ -161,7 +161,7 @@ final class InitCommandTest extends TestCase
         $result = (new InitCommand())($scope);
 
         self::assertSame(0, $result);
-        self::assertSame($existing, file_get_contents($target . '/app/Collab.php'));
+        self::assertSame($existing, file_get_contents($target . '/app/AgentHarness.php'));
         self::assertFileDoesNotExist($target . '/composer.json');
 
         rewind($stream);
@@ -170,18 +170,18 @@ final class InitCommandTest extends TestCase
     }
 
     #[Test]
-    public function force_overwrites_collab_starter_files(): void
+    public function force_overwrites_agent_harness_starter_files(): void
     {
-        $template = $this->createCollabTemplate();
+        $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
         $target = $this->tempDir . '/project';
 
         mkdir($target . '/app', 0755, recursive: true);
-        file_put_contents($target . '/app/Collab.php', '<?php echo "existing";');
+        file_put_contents($target . '/app/AgentHarness.php', '<?php echo "existing";');
 
         $scope = $this->buildScope($target, [
             'force' => true,
-            'starter' => 'collab',
+            'starter' => 'agent-harness',
             'template-path' => $template,
             'framework-path' => $framework,
         ]);
@@ -189,7 +189,7 @@ final class InitCommandTest extends TestCase
         $result = (new InitCommand())($scope);
 
         self::assertSame(0, $result);
-        self::assertSame("<?php\n\ndeclare(strict_types=1);\n", file_get_contents($target . '/app/Collab.php'));
+        self::assertSame("<?php\n\ndeclare(strict_types=1);\n", file_get_contents($target . '/app/AgentHarness.php'));
         self::assertFileExists($target . '/composer.json');
     }
 
@@ -207,7 +207,7 @@ final class InitCommandTest extends TestCase
         rewind($stream);
         $output = stream_get_contents($stream);
         self::assertStringContainsString('Unknown starter: unknown', $output);
-        self::assertStringContainsString('Available starters: script, collab', $output);
+        self::assertStringContainsString('Available starters: script, agent-harness', $output);
     }
 
     /** @param array<string, mixed> $options */
@@ -242,7 +242,7 @@ final class InitCommandTest extends TestCase
         return [$scope, $stream];
     }
 
-    private function createCollabTemplate(): string
+    private function createAgentHarnessTemplate(): string
     {
         $template = $this->tempDir . '/template';
 
@@ -250,14 +250,14 @@ final class InitCommandTest extends TestCase
         mkdir($template . '/config', 0755, recursive: true);
         mkdir($template . '/vendor', 0755, recursive: true);
 
-        file_put_contents($template . '/app/Collab.php', "<?php\n\ndeclare(strict_types=1);\n");
-        file_put_contents($template . '/config/phalanx.toml', "[app]\nname = \"collab-starter\"\n");
+        file_put_contents($template . '/app/AgentHarness.php', "<?php\n\ndeclare(strict_types=1);\n");
+        file_put_contents($template . '/config/phalanx.toml', "[app]\nname = \"agent-harness\"\n");
         file_put_contents($template . '/composer.lock', '{}');
         file_put_contents($template . '/vendor/ignored.php', '<?php');
         file_put_contents(
             $template . '/composer.json',
             json_encode([
-                'name' => 'phalanx-php/collab-starter',
+                'name' => 'phalanx-php/agent-harness',
                 'repositories' => [
                     [
                         'type' => 'path',
