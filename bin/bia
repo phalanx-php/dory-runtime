@@ -9,8 +9,13 @@ declare(strict_types=1);
 // executing from that embedded PHAR.
 if (extension_loaded('Phar') && \Phar::running() !== '') {
     $pharAutoload = 'phar://' . \Phar::running() . '/vendor/autoload.php';
+    $pharFunctions = 'phar://' . \Phar::running() . '/src/functions.php';
 
     if (is_file($pharAutoload)) {
+        if (is_file($pharFunctions) && !function_exists('bia')) {
+            require $pharFunctions;
+        }
+
         require $pharAutoload;
 
         $projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
@@ -24,7 +29,7 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
         $context = [
             ...$projectConfig->contextOverlay(),
             ...$env,
-            'argv' => $argv ?? $_SERVER['argv'] ?? [],
+            'argv' => bia_normalized_argv($argv ?? $_SERVER['argv'] ?? []),
         ];
 
         $providers = [
@@ -35,45 +40,45 @@ if (extension_loaded('Phar') && \Phar::running() !== '') {
             new \Phalanx\WebSocket\Bundle(),
         ];
 
-        exit(
+        bia_exit(
             \Phalanx\Console\Console::starting($context)
                 ->providers(...$providers)
                 ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
                 ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
                 ->default('run')
-                ->run()
+                ->run(bia_normalized_args($argv ?? $_SERVER['argv'] ?? []))
         );
     }
 }
 
-$autoload = dirname(__DIR__) . '/vendor/autoload_runtime.php';
+$autoload = dirname(__DIR__) . '/vendor/autoload.php';
 
 if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 3) . '/vendor/autoload_runtime.php';
+    $autoload = dirname(__DIR__, 3) . '/vendor/autoload.php';
 }
 
 if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 3) . '/phalanx/vendor/autoload_runtime.php';
+    $autoload = dirname(__DIR__, 3) . '/phalanx/vendor/autoload.php';
 }
 
 if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 4) . '/vendor/autoload_runtime.php';
+    $autoload = dirname(__DIR__, 4) . '/vendor/autoload.php';
 }
 
 if (!is_file($autoload)) {
-    fwrite(STDERR, "Could not find autoload_runtime.php. Run 'composer install' first.\n");
-    exit(1);
+    fwrite(STDERR, "Could not find Composer autoload.php. Run 'composer install' first.\n");
+    bia_exit(1);
 }
 
-$loader = require dirname($autoload) . '/autoload.php';
-
-$loader->addPsr4('Phalanx\\Bia\\', dirname(__DIR__) . '/src/');
 $functionsFile = dirname(__DIR__) . '/src/functions.php';
 
 if (is_file($functionsFile) && !function_exists('bia')) {
     require $functionsFile;
 }
 
+$loader = require $autoload;
+
+$loader->addPsr4('Phalanx\\Bia\\', dirname(__DIR__) . '/src/');
 $projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
 
 $context = $_SERVER;
@@ -89,7 +94,7 @@ $providers = [
     new \Phalanx\WebSocket\Bundle(),
 ];
 
-exit(
+bia_exit(
     \Phalanx\Console\Console::starting([
         ...$projectConfig->contextOverlay(),
         ...$context,
@@ -98,5 +103,35 @@ exit(
         ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
         ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
         ->default('run')
-        ->run(array_slice($_SERVER['argv'] ?? [], 1))
+        ->run(bia_normalized_args($_SERVER['argv'] ?? []))
 );
+
+/** @param list<string> $argv */
+function bia_normalized_argv(array $argv): array
+{
+    if (count($argv) > 1) {
+        return $argv;
+    }
+
+    return [$argv[0] ?? 'bia', 'help'];
+}
+
+/** @param list<string> $argv */
+function bia_normalized_args(array $argv): array
+{
+    $args = array_slice($argv, 1);
+
+    return $args === [] ? ['help'] : $args;
+}
+
+function bia_exit(int $code): never
+{
+    if (class_exists(\Swoole\Runtime::class, false)) {
+        try {
+            \Swoole\Runtime::enableCoroutine(false);
+        } catch (\Throwable) {
+        }
+    }
+
+    exit($code);
+}

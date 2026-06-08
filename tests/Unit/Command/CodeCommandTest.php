@@ -34,11 +34,16 @@ use Phalanx\Bia\Command\CodeNodesCommand;
 use Phalanx\Bia\Command\CodeReferencesCommand;
 use Phalanx\Bia\Command\CodeTokensCommand;
 use Phalanx\Scope\ExecutionScope;
+use Phalanx\Stream\ResourceHandle;
+use Phalanx\Stream\Stream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class CodeCommandTest extends TestCase
 {
+    /** @var list<ResourceHandle> */
+    private array $streams = [];
+
     #[Test]
     public function check_reports_project_summary(): void
     {
@@ -321,8 +326,9 @@ final class CodeCommandTest extends TestCase
      */
     private function context(array $args = [], array $options = []): array
     {
-        $stream = fopen('php://memory', 'rw');
-        self::assertIsResource($stream);
+        $buffer = Stream::captureBuffer();
+        $this->streams[] = $buffer;
+        $stream = $buffer->resource();
 
         $output = new StreamOutput($stream, new TerminalEnvironment(isTty: false));
         $inner = $this->createStub(ExecutionScope::class);
@@ -352,8 +358,9 @@ final class CodeCommandTest extends TestCase
      */
     private function argvContext(CommandConfig $config, array $rawArgs): array
     {
-        $stream = fopen('php://memory', 'rw');
-        self::assertIsResource($stream);
+        $buffer = Stream::captureBuffer();
+        $this->streams[] = $buffer;
+        $stream = $buffer->resource();
 
         $output = new StreamOutput($stream, new TerminalEnvironment(isTty: false));
         $inner = $this->createStub(ExecutionScope::class);

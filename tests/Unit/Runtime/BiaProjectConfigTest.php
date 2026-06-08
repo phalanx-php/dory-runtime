@@ -55,7 +55,7 @@ final class BiaProjectConfigTest extends TestCase
     public function discover_walks_up_directories(): void
     {
         $parent = $this->makeTempDir();
-        $child = $parent . '/sub/deep';
+        $child = $this->tempPath('sub/deep');
         mkdir($child, 0777, true);
 
         $this->writeComposerJson($parent, ['timeout' => 90]);
@@ -164,7 +164,7 @@ final class BiaProjectConfigTest extends TestCase
     {
         $dir = $this->makeTempDir();
 
-        file_put_contents($dir . '/composer.json', json_encode([
+        $this->writeTempFile('composer.json', json_encode([
             'name' => 'test/project',
         ]));
 
@@ -179,7 +179,7 @@ final class BiaProjectConfigTest extends TestCase
     {
         $dir = $this->makeTempDir();
 
-        file_put_contents($dir . '/composer.json', '{broken');
+        $this->writeTempFile('composer.json', '{broken');
 
         $config = BiaProjectConfig::discover($dir);
 
@@ -192,7 +192,7 @@ final class BiaProjectConfigTest extends TestCase
     {
         $dir = $this->makeTempDir();
 
-        file_put_contents($dir . '/composer.json', json_encode([
+        $this->writeTempFile('composer.json', json_encode([
             'name' => 'test/project',
             'extra' => ['bia' => 'not-an-array'],
         ]));
@@ -234,7 +234,7 @@ final class BiaProjectConfigTest extends TestCase
     /** @param array<string, mixed> $biaConfig */
     private function writeComposerJson(string $dir, array $biaConfig): void
     {
-        file_put_contents($dir . '/composer.json', json_encode([
+        $this->writeTempFile('composer.json', json_encode([
             'name' => 'test/project',
             'extra' => ['bia' => $biaConfig],
         ]));

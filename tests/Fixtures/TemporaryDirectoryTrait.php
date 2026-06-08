@@ -4,42 +4,42 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Fixtures;
 
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
+use Phalanx\Testing\TempWorkspace;
 
 trait TemporaryDirectoryTrait
 {
-    private ?string $tempDir = null;
+    private ?TempWorkspace $tempWorkspace = null;
 
     protected function tearDownTemporaryDirectory(): void
     {
-        if ($this->tempDir !== null && is_dir($this->tempDir)) {
-            self::removeDirectory($this->tempDir);
-        }
+        $this->tempWorkspace?->cleanup();
     }
 
     private function makeTempDir(string $prefix = 'bia_test_'): string
     {
-        $dir = sys_get_temp_dir() . '/' . $prefix . uniqid('', true);
-        mkdir($dir, 0777, true);
+        $this->tempWorkspace ??= TempWorkspace::create($prefix);
 
-        $this->tempDir = $dir;
-
-        return $dir;
+        return $this->tempWorkspace->root;
     }
 
-    private static function removeDirectory(string $dir): void
+    private function tempPath(string $relative): string
     {
-        $items = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
+        $this->tempWorkspace ??= TempWorkspace::create();
 
-        foreach ($items as $item) {
-            $item->isDir() ? rmdir($item->getPathname()) : unlink($item->getPathname());
-        }
+        return $this->tempWorkspace->path($relative);
+    }
 
-        rmdir($dir);
+    private function writeTempFile(string $relative, string $contents): string
+    {
+        $this->tempWorkspace ??= TempWorkspace::create();
+
+        return $this->tempWorkspace->file($relative, $contents);
+    }
+
+    private function readTempFile(string $relative): string
+    {
+        $this->tempWorkspace ??= TempWorkspace::create();
+
+        return $this->tempWorkspace->read($relative);
     }
 }

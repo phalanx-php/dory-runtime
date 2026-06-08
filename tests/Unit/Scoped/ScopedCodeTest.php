@@ -43,7 +43,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function parse_file_uses_injected_parser(): void
     {
-        $path = sys_get_temp_dir() . '/bia-runtime-example.php';
+        $path = 'bia-runtime-example.php';
         $result = self::parseResult($path);
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())
@@ -59,7 +59,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function declarations_for_file_returns_declaration_index(): void
     {
-        $path = sys_get_temp_dir() . '/bia-runtime-example.php';
+        $path = 'bia-runtime-example.php';
         $parser = $this->createMock(CodeParser::class);
         $parser->expects(self::once())->method('parseFile')->with($path)->willReturn(self::parseResult($path));
 
@@ -111,7 +111,7 @@ final class ScopedCodeTest extends TestCase
     #[Test]
     public function project_methods_pass_explicit_queries_to_parser(): void
     {
-        $root = sys_get_temp_dir() . '/bia-runtime-project';
+        $root = 'bia-runtime-project';
         $declarationQuery = new DeclarationQuery(kind: 'class');
         $tokenQuery = new TokenQuery(text: 'class');
         $nodeQuery = new NodeQuery(kind: 'method');

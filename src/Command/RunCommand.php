@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Command;
 
+use Phalanx\Cancellation\Halted;
 use Phalanx\Console\Command\Arg;
 use Phalanx\Console\Command\CommandConfig;
 use Phalanx\Console\Command\CommandContext;
@@ -12,6 +13,7 @@ use Phalanx\Console\Command\Opt;
 use Phalanx\Bia\Exception\ScriptFault;
 use Phalanx\Bia\Runtime\BiaConfig;
 use Phalanx\Bia\Runtime\BiaScriptExecutor;
+use Phalanx\Filesystem\ScopedTempFile;
 use Phalanx\Task\Scopeable;
 use Throwable;
 
@@ -31,6 +33,8 @@ class RunCommand implements Scopeable, DescribesCommand
 
         try {
             return $this->scripts->execute($ctx, $scriptPath, self::configFor($ctx));
+        } catch (Halted $e) {
+            throw $e;
         } catch (Throwable $e) {
             throw $isInline
                 ? ScriptFault::inline($e)
@@ -94,23 +98,7 @@ class RunCommand implements Scopeable, DescribesCommand
         }
 
         $php = "<?php declare(strict_types=1);\n{$body}\n";
-        $tmp = tempnam(sys_get_temp_dir(), 'bia_');
-        if ($tmp === false) {
-            throw new \RuntimeException('Failed to create inline script file.');
-        }
-
-        $path = "{$tmp}.php";
-        if (!rename($tmp, $path)) {
-            @unlink($tmp);
-            throw new \RuntimeException('Failed to prepare inline script file.');
-        }
-
-        file_put_contents($path, $php);
-        $ctx->onDispose(static function () use ($path): void {
-            @unlink($path);
-        });
-
-        return $path;
+        return ScopedTempFile::write($ctx, 'bia_', $php);
     }
 
     private static function configFor(CommandContext $ctx): BiaConfig

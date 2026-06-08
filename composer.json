@@ -110,7 +110,21 @@
             "type": "path",
             "url": "../../phalanx/src/*",
             "options": {
-                "symlink": true
+                "symlink": true,
+                "versions": {
+                    "phalanx-php/runtime": "0.7.x-dev",
+                    "phalanx-php/mark": "0.7.x-dev",
+                    "phalanx-php/console": "0.7.x-dev",
+                    "phalanx-php/network": "0.7.x-dev",
+                    "phalanx-php/config": "0.7.x-dev",
+                    "phalanx-php/websocket": "0.7.x-dev",
+                    "phalanx-php/worker": "0.7.x-dev",
+                    "phalanx-php/http-client": "0.7.x-dev",
+                    "phalanx-php/filesystem": "0.7.x-dev",
+                    "phalanx-php/dev-server": "0.7.x-dev",
+                    "phalanx-php/http": "0.7.x-dev",
+                    "phalanx-php/stream": "0.7.x-dev"
+                }
             }
         }
     ],

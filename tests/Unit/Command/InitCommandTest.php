@@ -4,58 +4,49 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Unit\Command;
 
-use FilesystemIterator;
 use Phalanx\Bia\Command\InitCommand;
 use Phalanx\Console\Command\CommandArgs;
 use Phalanx\Console\Command\CommandContext;
 use Phalanx\Console\Command\CommandOptions;
 use Phalanx\Console\Output\StreamOutput;
 use Phalanx\Console\Output\TerminalEnvironment;
+use Phalanx\Stream\ResourceHandle;
+use Phalanx\Stream\Stream;
+use Phalanx\Testing\TempWorkspace;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
 
 final class InitCommandTest extends TestCase
 {
-    private string $tempDir;
+    private TempWorkspace $workspace;
+
+    /** @var list<ResourceHandle> */
+    private array $streams = [];
 
     protected function setUp(): void
     {
-        $this->tempDir = sys_get_temp_dir() . '/' . uniqid('bia-init-test-', true);
+        $this->workspace = TempWorkspace::create('bia-init-test-');
     }
 
     protected function tearDown(): void
     {
-        if (is_dir($this->tempDir)) {
-            $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($this->tempDir, FilesystemIterator::SKIP_DOTS),
-                RecursiveIteratorIterator::CHILD_FIRST,
-            );
-
-            foreach ($files as $file) {
-                $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
-            }
-
-            rmdir($this->tempDir);
-        }
+        $this->workspace->cleanup();
     }
 
     #[Test]
     public function creates_hello_script_in_target_directory(): void
     {
-        mkdir($this->tempDir, 0755, recursive: true);
+        $target = $this->workspace->dir('target');
 
-        $scope = $this->buildScope($this->tempDir);
+        $scope = $this->buildScope($target);
         $command = new InitCommand();
         $result = $command($scope);
 
         self::assertSame(0, $result);
-        self::assertFileExists($this->tempDir . '/hello.php');
+        self::assertFileExists($target . '/hello.php');
 
-        $content = file_get_contents($this->tempDir . '/hello.php');
-        self::assertIsString($content);
+        $content = $this->workspace->read('target/hello.php');
         self::assertStringContainsString('<?php', $content);
         self::assertStringContainsString('declare(strict_types=1)', $content);
     }
@@ -63,45 +54,42 @@ final class InitCommandTest extends TestCase
     #[Test]
     public function does_not_overwrite_existing_hello_script(): void
     {
-        mkdir($this->tempDir, 0755, recursive: true);
+        $target = $this->workspace->dir('target');
         $existing = 'existing content';
-        file_put_contents($this->tempDir . '/hello.php', $existing);
+        $this->workspace->file('target/hello.php', $existing);
 
-        [$scope, $stream] = $this->buildScopeWithStream($this->tempDir);
+        [$scope, $stream] = $this->buildScopeWithStream($target);
         $command = new InitCommand();
         $result = $command($scope);
 
         self::assertSame(0, $result);
+        self::assertSame($existing, $this->workspace->read('target/hello.php'));
 
-        $persisted = file_get_contents($this->tempDir . '/hello.php');
-        self::assertIsString($persisted);
-        self::assertSame($existing, $persisted);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
         self::assertStringContainsString('already exists', $output);
     }
 
     #[Test]
     public function creates_directory_if_missing(): void
     {
-        self::assertDirectoryDoesNotExist($this->tempDir);
+        $target = $this->workspace->missingPath('created');
+        self::assertDirectoryDoesNotExist($target);
 
-        $scope = $this->buildScope($this->tempDir);
+        $scope = $this->buildScope($target);
         $command = new InitCommand();
         $result = $command($scope);
 
         self::assertSame(0, $result);
-        self::assertDirectoryExists($this->tempDir);
-        self::assertFileExists($this->tempDir . '/hello.php');
+        self::assertDirectoryExists($target);
+        self::assertFileExists($target . '/hello.php');
     }
 
     #[Test]
     public function returns_zero_on_success(): void
     {
-        mkdir($this->tempDir, 0755, recursive: true);
+        $target = $this->workspace->dir('target');
 
-        $scope = $this->buildScope($this->tempDir);
+        $scope = $this->buildScope($target);
         $command = new InitCommand();
         $result = $command($scope);
 
@@ -113,7 +101,7 @@ final class InitCommandTest extends TestCase
     {
         $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
-        $target = $this->tempDir . '/project';
+        $target = $this->workspace->path('project');
 
         [$scope, $stream] = $this->buildScopeWithStream($target, [
             'starter' => 'agent-harness',
@@ -130,14 +118,13 @@ final class InitCommandTest extends TestCase
         self::assertFileDoesNotExist($target . '/composer.lock');
         self::assertDirectoryDoesNotExist($target . '/vendor');
 
-        $composer = json_decode((string) file_get_contents($target . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+        $composer = json_decode($this->workspace->read('project/composer.json'), true, flags: JSON_THROW_ON_ERROR);
         self::assertIsArray($composer);
         self::assertSame('../phalanx', $composer['repositories'][0]['url']);
         self::assertSame('0.7.x-dev', $composer['repositories'][0]['options']['versions']['phalanx-php/phalanx']);
 
-        rewind($stream);
-        $output = stream_get_contents($stream);
-        self::assertStringContainsString('Created Agent Harness starter', $output);
+        $output = $stream->contents();
+        self::assertStringContainsString('Created Agents starter', $output);
         self::assertStringContainsString('composer test', $output);
     }
 
@@ -146,11 +133,10 @@ final class InitCommandTest extends TestCase
     {
         $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
-        $target = $this->tempDir . '/project';
+        $target = $this->workspace->path('project');
         $existing = '<?php echo "existing";';
 
-        mkdir($target . '/app', 0755, recursive: true);
-        file_put_contents($target . '/app/AgentHarness.php', $existing);
+        $this->workspace->file('project/app/AgentHarness.php', $existing);
 
         [$scope, $stream] = $this->buildScopeWithStream($target, [
             'starter' => 'agent-harness',
@@ -161,11 +147,10 @@ final class InitCommandTest extends TestCase
         $result = (new InitCommand())($scope);
 
         self::assertSame(0, $result);
-        self::assertSame($existing, file_get_contents($target . '/app/AgentHarness.php'));
+        self::assertSame($existing, $this->workspace->read('project/app/AgentHarness.php'));
         self::assertFileDoesNotExist($target . '/composer.json');
 
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
         self::assertStringContainsString('already exists', $output);
     }
 
@@ -174,10 +159,9 @@ final class InitCommandTest extends TestCase
     {
         $template = $this->createAgentHarnessTemplate();
         $framework = $this->createFrameworkPath();
-        $target = $this->tempDir . '/project';
+        $target = $this->workspace->path('project');
 
-        mkdir($target . '/app', 0755, recursive: true);
-        file_put_contents($target . '/app/AgentHarness.php', '<?php echo "existing";');
+        $this->workspace->file('project/app/AgentHarness.php', '<?php echo "existing";');
 
         $scope = $this->buildScope($target, [
             'force' => true,
@@ -189,14 +173,14 @@ final class InitCommandTest extends TestCase
         $result = (new InitCommand())($scope);
 
         self::assertSame(0, $result);
-        self::assertSame("<?php\n\ndeclare(strict_types=1);\n", file_get_contents($target . '/app/AgentHarness.php'));
+        self::assertSame("<?php\n\ndeclare(strict_types=1);\n", $this->workspace->read('project/app/AgentHarness.php'));
         self::assertFileExists($target . '/composer.json');
     }
 
     #[Test]
     public function returns_error_for_unknown_starter(): void
     {
-        [$scope, $stream] = $this->buildScopeWithStream($this->tempDir, [
+        [$scope, $stream] = $this->buildScopeWithStream($this->workspace->path('target'), [
             'starter' => 'unknown',
         ]);
 
@@ -204,8 +188,7 @@ final class InitCommandTest extends TestCase
 
         self::assertSame(1, $result);
 
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
         self::assertStringContainsString('Unknown starter: unknown', $output);
         self::assertStringContainsString('Available starters: script, agent-harness', $output);
     }
@@ -218,16 +201,16 @@ final class InitCommandTest extends TestCase
         return $scope;
     }
 
-    /** @return array{CommandContext, resource} */
+    /** @return array{CommandContext, ResourceHandle} */
     private function buildScopeWithStream(string $directory, array $options = []): array
     {
         $args = new CommandArgs(['directory' => $directory]);
         $options = new CommandOptions($options);
-        $stream = fopen('php://memory', 'rw');
-        self::assertIsResource($stream);
+        $stream = Stream::captureBuffer();
+        $this->streams[] = $stream;
 
         $terminal = new TerminalEnvironment(isTty: false);
-        $output = new StreamOutput($stream, $terminal);
+        $output = new StreamOutput($stream->resource(), $terminal);
 
         $scope = $this->createStub(CommandContext::class);
         $scope->method('$args::get')->willReturn($args);
@@ -244,38 +227,25 @@ final class InitCommandTest extends TestCase
 
     private function createAgentHarnessTemplate(): string
     {
-        $template = $this->tempDir . '/template';
-
-        mkdir($template . '/app', 0755, recursive: true);
-        mkdir($template . '/config', 0755, recursive: true);
-        mkdir($template . '/vendor', 0755, recursive: true);
-
-        file_put_contents($template . '/app/AgentHarness.php', "<?php\n\ndeclare(strict_types=1);\n");
-        file_put_contents($template . '/config/phalanx.toml', "[app]\nname = \"agent-harness\"\n");
-        file_put_contents($template . '/composer.lock', '{}');
-        file_put_contents($template . '/vendor/ignored.php', '<?php');
-        file_put_contents(
-            $template . '/composer.json',
-            json_encode([
-                'name' => 'phalanx-php/agent-harness',
-                'repositories' => [
-                    [
-                        'type' => 'path',
-                        'url' => '../../phalanx',
-                    ],
+        $this->workspace->file('template/app/AgentHarness.php', "<?php\n\ndeclare(strict_types=1);\n");
+        $this->workspace->file('template/config/phalanx.toml', "[app]\nname = \"agents\"\n");
+        $this->workspace->file('template/composer.lock', '{}');
+        $this->workspace->file('template/vendor/ignored.php', '<?php');
+        $this->workspace->file('template/composer.json', json_encode([
+            'name' => 'phalanx-php/agents-starter',
+            'repositories' => [
+                [
+                    'type' => 'path',
+                    'url' => '../../phalanx',
                 ],
-            ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
-        );
+            ],
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
 
-        return $template;
+        return $this->workspace->path('template');
     }
 
     private function createFrameworkPath(): string
     {
-        $framework = $this->tempDir . '/phalanx';
-
-        mkdir($framework, 0755, recursive: true);
-
-        return $framework;
+        return $this->workspace->dir('phalanx');
     }
 }

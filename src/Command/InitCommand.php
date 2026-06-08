@@ -38,7 +38,7 @@ class InitCommand implements Scopeable, DescribesCommand
 
         declare(strict_types=1);
 
-        bia()->println('Greetings from Olympus.');
+        bia()->println('Hello from Bia.');
 
         $result = bia()->attempt(static fn(): string => 'The phalanx holds.')
             ->timeout(5.0)
@@ -101,7 +101,7 @@ class InitCommand implements Scopeable, DescribesCommand
             options: [
                 Opt::value('name', 'n', 'Script filename', 'hello.php'),
                 Opt::value('starter', '', 'Starter template: script or agent-harness', self::STARTER_SCRIPT),
-                Opt::value('template-path', '', 'Local Agent Harness starter template path'),
+                Opt::value('template-path', '', 'Local Agents starter template path'),
                 Opt::value('framework-path', '', 'Local phalanx framework path'),
                 Opt::flag('force', 'f', 'Overwrite existing files'),
             ],
@@ -131,7 +131,7 @@ class InitCommand implements Scopeable, DescribesCommand
         );
 
         if (!is_dir($template)) {
-            $output->persist("Agent Harness starter template not found: {$template}");
+            $output->persist("Agents starter template not found: {$template}");
             return 1;
         }
 
@@ -167,7 +167,7 @@ class InitCommand implements Scopeable, DescribesCommand
 
         $this->rewriteComposerPath($target, $framework);
 
-        $output->persist("Created Agent Harness starter: {$target}");
+        $output->persist("Created Agents starter: {$target}");
         $output->persist('');
         $output->persist('Run it with:');
         $output->persist('  composer install');

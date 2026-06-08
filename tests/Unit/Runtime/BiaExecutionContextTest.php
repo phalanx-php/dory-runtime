@@ -11,6 +11,7 @@ use Phalanx\Bia\Runtime\ScriptContextHolder;
 use Phalanx\Bia\Scoped\ScopedCode;
 use Phalanx\Bia\Scoped\ScopedFiles;
 use Phalanx\Bia\Scoped\ScopedHttpClient;
+use Phalanx\Mark\Mark;
 use Phalanx\Scope\ExecutionScope;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -117,6 +118,22 @@ final class BiaExecutionContextTest extends TestCase
         $ctx = new BiaExecutionContext($scope, '/tmp/test.php', $config);
 
         $ctx->service(BiaConfig::class);
+    }
+
+    #[Test]
+    public function delay_accepts_numeric_seconds_for_scripts(): void
+    {
+        $scope = $this->createMock(ExecutionScope::class);
+        $scope->expects(self::once())
+            ->method('delay')
+            ->with(self::callback(
+                static fn(Mark $duration): bool => $duration->toMilliseconds() === 250,
+            ));
+
+        $config = new BiaConfig();
+        $ctx = new BiaExecutionContext($scope, '/tmp/test.php', $config);
+
+        $ctx->delay(0.25);
     }
 
     #[Test]

@@ -14,6 +14,7 @@ use Phalanx\Bia\Rendering\ValueRendererPipeline;
 use Phalanx\Bia\Scoped\ScopedCode;
 use Phalanx\Bia\Scoped\ScopedFiles;
 use Phalanx\Bia\Scoped\ScopedHttpClient;
+use Phalanx\Mark\Mark;
 use Phalanx\Scope\ExecutionScope;
 use Phalanx\Support\ExecutionScopeDelegate;
 use Phalanx\Task\Executable;
@@ -80,6 +81,11 @@ final class BiaExecutionContext implements ScriptContext
     public function settle(Scopeable|Executable|Closure ...$tasks): SettlementBag
     {
         return $this->innerScope()->settle(...$this->wrapTasks($tasks));
+    }
+
+    public function delay(Mark|int|float $duration): void
+    {
+        $this->innerScope()->delay($duration instanceof Mark ? $duration : Mark::s($duration));
     }
 
     /** @return array<string|int, mixed> */

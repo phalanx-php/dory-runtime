@@ -29,7 +29,7 @@ final class RunCommandTest extends TestCase
     #[Test]
     public function throws_for_relative_nonexistent_path(): void
     {
-        $scope = $this->buildScope('no-such-directory/olympus.php');
+        $scope = $this->buildScope('no-such-directory/script.php');
         $command = new RunCommand(new BiaScriptExecutor());
 
         $this->expectException(RuntimeException::class);

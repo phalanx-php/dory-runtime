@@ -107,7 +107,7 @@ final class BiaConfigPrecedenceTest extends TestCase
     {
         $dir = $this->makeTempDir('bia_precedence_');
 
-        file_put_contents($dir . '/composer.json', json_encode([
+        $this->writeTempFile('composer.json', json_encode([
             'name' => 'test/precedence',
             'extra' => ['bia' => $biaConfig],
         ]));

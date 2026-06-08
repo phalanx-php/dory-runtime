@@ -9,12 +9,17 @@ use Phalanx\Console\Output\StreamOutput;
 use Phalanx\Console\Output\TerminalEnvironment;
 use Phalanx\Bia\Command\DoctorCommand;
 use Phalanx\Bia\Runtime\BiaConfig;
+use Phalanx\Stream\ResourceHandle;
+use Phalanx\Stream\Stream;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class DoctorCommandTest extends TestCase
 {
+    /** @var list<ResourceHandle> */
+    private array $streams = [];
+
     #[Test]
     #[RequiresPhpExtension('swoole')]
     public function returns_zero_when_environment_is_healthy(): void
@@ -87,8 +92,9 @@ final class DoctorCommandTest extends TestCase
     private function buildScope(?BiaConfig $config = null): array
     {
         $config ??= new BiaConfig();
-        $stream = fopen('php://memory', 'rw');
-        self::assertIsResource($stream);
+        $buffer = Stream::captureBuffer();
+        $this->streams[] = $buffer;
+        $stream = $buffer->resource();
 
         $terminal = new TerminalEnvironment(isTty: false);
         $output = new StreamOutput($stream, $terminal);
