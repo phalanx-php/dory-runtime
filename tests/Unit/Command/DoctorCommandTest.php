@@ -37,9 +37,7 @@ final class DoctorCommandTest extends TestCase
         [$scope, $stream] = $this->buildScope();
         $command = new DoctorCommand();
         $command($scope);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertStringContainsString('[pass]', $output);
         self::assertStringContainsString('PHP >= 8.4', $output);
@@ -51,9 +49,7 @@ final class DoctorCommandTest extends TestCase
         [$scope, $stream] = $this->buildScope();
         $command = new DoctorCommand();
         $command($scope);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertStringContainsString('Swoole loaded', $output);
     }
@@ -64,9 +60,7 @@ final class DoctorCommandTest extends TestCase
         [$scope, $stream] = $this->buildScope();
         $command = new DoctorCommand();
         $command($scope);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertStringContainsString('Bia config', $output);
     }
@@ -78,26 +72,22 @@ final class DoctorCommandTest extends TestCase
         [$scope, $stream] = $this->buildScope($config);
         $command = new DoctorCommand();
         $command($scope);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertStringContainsString('[fail]', $output);
         self::assertStringContainsString('Bia config', $output);
     }
 
     /**
-     * @return array{CommandContext, resource}
+     * @return array{CommandContext, ResourceHandle}
      */
     private function buildScope(?BiaConfig $config = null): array
     {
         $config ??= new BiaConfig();
         $buffer = Stream::captureBuffer();
         $this->streams[] = $buffer;
-        $stream = $buffer->resource();
-
         $terminal = new TerminalEnvironment(isTty: false);
-        $output = new StreamOutput($stream, $terminal);
+        $output = new StreamOutput($buffer->resource(), $terminal);
 
         $scope = $this->createStub(CommandContext::class);
         $scope->method('service')->willReturnCallback(
@@ -108,6 +98,6 @@ final class DoctorCommandTest extends TestCase
             },
         );
 
-        return [$scope, $stream];
+        return [$scope, $buffer];
     }
 }

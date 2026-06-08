@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Command;
 
-use FilesystemIterator;
 use Phalanx\Boot\AppContext;
 use Phalanx\Console\Command\Arg;
 use Phalanx\Console\Command\CommandConfig;
@@ -12,9 +11,8 @@ use Phalanx\Console\Command\CommandContext;
 use Phalanx\Console\Command\DescribesCommand;
 use Phalanx\Console\Command\Opt;
 use Phalanx\Console\Output\StreamOutput;
+use Phalanx\Filesystem\Files;
 use Phalanx\Task\Scopeable;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
 
 class InitCommand implements Scopeable, DescribesCommand
@@ -49,21 +47,29 @@ class InitCommand implements Scopeable, DescribesCommand
         return 0;
         PHP;
 
+    public function __construct(
+        private ?ProjectFiles $files = null,
+    ) {
+    }
+
     public function __invoke(CommandContext $ctx): int
     {
         $output = $ctx->service(StreamOutput::class);
+        $files = $this->files($ctx);
 
         $directory = (string) $ctx->args->get('directory', '.');
         $absolute = realpath($directory) ?: $directory;
 
-        if (!is_dir($absolute) && !mkdir($absolute, 0755, recursive: true)) {
-            fwrite(STDERR, "Could not create directory: {$directory}\n");
+        try {
+            $files->ensureDirectory($absolute);
+        } catch (RuntimeException) {
+            $output->persist("Could not create directory: {$directory}");
             return 1;
         }
 
         $starter = (string) $ctx->options->get('starter', self::STARTER_SCRIPT);
         if ($starter === self::STARTER_AGENT_HARNESS) {
-            return $this->createAgentHarnessStarter($ctx, $absolute, $output);
+            return $this->createAgentHarnessStarter($ctx, $absolute, $output, $files);
         }
 
         if ($starter !== self::STARTER_SCRIPT) {
@@ -75,13 +81,13 @@ class InitCommand implements Scopeable, DescribesCommand
         $scriptName = (string) ($ctx->options->get('name') ?? 'hello.php');
         $scriptPath = rtrim($absolute, '/') . '/' . $scriptName;
 
-        if (file_exists($scriptPath) && !$ctx->options->flag('force')) {
+        if ($files->fileExists($scriptPath) && !$ctx->options->flag('force')) {
             $output->persist("File already exists: {$scriptPath}");
             $output->persist('Use --force to overwrite.');
             return 0;
         }
 
-        file_put_contents($scriptPath, self::SAMPLE_SCRIPT . "\n");
+        $files->write($scriptPath, self::SAMPLE_SCRIPT . "\n");
 
         $output->persist("Created: {$scriptPath}");
         $output->persist('');
@@ -115,8 +121,12 @@ class InitCommand implements Scopeable, DescribesCommand
         );
     }
 
-    private function createAgentHarnessStarter(CommandContext $ctx, string $target, StreamOutput $output): int
-    {
+    private function createAgentHarnessStarter(
+        CommandContext $ctx,
+        string $target,
+        StreamOutput $output,
+        ProjectFiles $files,
+    ): int {
         $template = $this->pathOption(
             $ctx,
             'template-path',
@@ -130,42 +140,46 @@ class InitCommand implements Scopeable, DescribesCommand
             dirname(__DIR__, 4) . '/phalanx',
         );
 
-        if (!is_dir($template)) {
+        if (!$files->directoryExists($template)) {
             $output->persist("Agents starter template not found: {$template}");
             return 1;
         }
 
-        if (!is_dir($framework)) {
+        if (!$files->directoryExists($framework)) {
             $output->persist("Phalanx framework path not found: {$framework}");
             return 1;
         }
 
         $force = $ctx->options->flag('force');
-        foreach ($this->templateFiles($template) as $source => $relative) {
+        foreach ($files->templateFiles($template, self::EXCLUDED_TEMPLATE_NAMES) as $source => $relative) {
             $destination = rtrim($target, '/') . '/' . $relative;
-            if (file_exists($destination) && !$force) {
+            if ($files->fileExists($destination) && !$force) {
                 $output->persist("File already exists: {$destination}");
                 $output->persist('Use --force to overwrite.');
                 return 0;
             }
         }
 
-        foreach ($this->templateFiles($template) as $source => $relative) {
+        foreach ($files->templateFiles($template, self::EXCLUDED_TEMPLATE_NAMES) as $source => $relative) {
             $destination = rtrim($target, '/') . '/' . $relative;
             $directory = dirname($destination);
-            if (!is_dir($directory) && !mkdir($directory, 0755, recursive: true)) {
+            try {
+                $files->ensureDirectory($directory);
+            } catch (RuntimeException) {
                 $output->persist("Could not create directory: {$directory}");
                 return 1;
             }
 
-            if (!copy($source, $destination)) {
+            try {
+                $files->copy($source, $destination);
+            } catch (RuntimeException) {
                 $output->persist("Could not copy file: {$relative}");
 
                 return 1;
             }
         }
 
-        $this->rewriteComposerPath($target, $framework);
+        $this->rewriteComposerPath($target, $framework, $files);
 
         $output->persist("Created Agents starter: {$target}");
         $output->persist('');
@@ -191,40 +205,14 @@ class InitCommand implements Scopeable, DescribesCommand
         return $default;
     }
 
-    /** @return array<string, string> */
-    private function templateFiles(string $template): array
-    {
-        $files = [];
-        $iterator = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($template, FilesystemIterator::SKIP_DOTS),
-        );
-
-        foreach ($iterator as $file) {
-            $path = $file->getPathname();
-            $relative = ltrim(substr($path, strlen(rtrim($template, '/'))), '/');
-            $segments = explode('/', str_replace('\\', '/', $relative));
-            if (array_intersect($segments, self::EXCLUDED_TEMPLATE_NAMES) !== []) {
-                continue;
-            }
-
-            if ($file->isFile()) {
-                $files[$path] = $relative;
-            }
-        }
-
-        ksort($files);
-
-        return $files;
-    }
-
-    private function rewriteComposerPath(string $target, string $framework): void
+    private function rewriteComposerPath(string $target, string $framework, ProjectFiles $files): void
     {
         $composerPath = rtrim($target, '/') . '/composer.json';
-        if (!is_file($composerPath)) {
+        if (!$files->fileExists($composerPath)) {
             return;
         }
 
-        $composer = json_decode((string) file_get_contents($composerPath), true, flags: JSON_THROW_ON_ERROR);
+        $composer = $files->readJson($composerPath);
         if (!is_array($composer)) {
             return;
         }
@@ -240,14 +228,7 @@ class InitCommand implements Scopeable, DescribesCommand
             ],
         ]];
 
-        $written = file_put_contents(
-            $composerPath,
-            json_encode($composer, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n",
-        );
-
-        if ($written === false) {
-            throw new RuntimeException("Could not rewrite composer path: {$composerPath}");
-        }
+        $files->writeJson($composerPath, $composer);
     }
 
     private function relativePath(string $fromDirectory, string $toDirectory): string
@@ -261,5 +242,10 @@ class InitCommand implements Scopeable, DescribesCommand
         }
 
         return implode('/', [...array_fill(0, count($from), '..'), ...$to]) ?: '.';
+    }
+
+    private function files(CommandContext $ctx): ProjectFiles
+    {
+        return $this->files ??= new PhalanxProjectFiles($ctx->service(Files::class));
     }
 }

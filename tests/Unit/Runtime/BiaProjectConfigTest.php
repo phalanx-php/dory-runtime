@@ -55,8 +55,7 @@ final class BiaProjectConfigTest extends TestCase
     public function discover_walks_up_directories(): void
     {
         $parent = $this->makeTempDir();
-        $child = $this->tempPath('sub/deep');
-        mkdir($child, 0777, true);
+        $child = dirname($this->writeTempFile('sub/deep/.keep', ''));
 
         $this->writeComposerJson($parent, ['timeout' => 90]);
 

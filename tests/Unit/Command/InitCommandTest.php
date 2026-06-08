@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phalanx\Bia\Tests\Unit\Command;
 
 use Phalanx\Bia\Command\InitCommand;
+use Phalanx\Bia\Command\ProjectFiles;
 use Phalanx\Console\Command\CommandArgs;
 use Phalanx\Console\Command\CommandContext;
 use Phalanx\Console\Command\CommandOptions;
@@ -13,6 +14,8 @@ use Phalanx\Console\Output\TerminalEnvironment;
 use Phalanx\Stream\ResourceHandle;
 use Phalanx\Stream\Stream;
 use Phalanx\Testing\TempWorkspace;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -21,12 +24,15 @@ final class InitCommandTest extends TestCase
 {
     private TempWorkspace $workspace;
 
+    private ProjectFiles $files;
+
     /** @var list<ResourceHandle> */
     private array $streams = [];
 
     protected function setUp(): void
     {
         $this->workspace = TempWorkspace::create('bia-init-test-');
+        $this->files = new TestProjectFiles($this->workspace);
     }
 
     protected function tearDown(): void
@@ -40,8 +46,7 @@ final class InitCommandTest extends TestCase
         $target = $this->workspace->dir('target');
 
         $scope = $this->buildScope($target);
-        $command = new InitCommand();
-        $result = $command($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertFileExists($target . '/hello.php');
@@ -59,8 +64,7 @@ final class InitCommandTest extends TestCase
         $this->workspace->file('target/hello.php', $existing);
 
         [$scope, $stream] = $this->buildScopeWithStream($target);
-        $command = new InitCommand();
-        $result = $command($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertSame($existing, $this->workspace->read('target/hello.php'));
@@ -76,8 +80,7 @@ final class InitCommandTest extends TestCase
         self::assertDirectoryDoesNotExist($target);
 
         $scope = $this->buildScope($target);
-        $command = new InitCommand();
-        $result = $command($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertDirectoryExists($target);
@@ -90,8 +93,7 @@ final class InitCommandTest extends TestCase
         $target = $this->workspace->dir('target');
 
         $scope = $this->buildScope($target);
-        $command = new InitCommand();
-        $result = $command($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
     }
@@ -109,7 +111,7 @@ final class InitCommandTest extends TestCase
             'framework-path' => $framework,
         ]);
 
-        $result = (new InitCommand())($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertFileExists($target . '/composer.json');
@@ -144,7 +146,7 @@ final class InitCommandTest extends TestCase
             'framework-path' => $framework,
         ]);
 
-        $result = (new InitCommand())($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertSame($existing, $this->workspace->read('project/app/AgentHarness.php'));
@@ -170,7 +172,7 @@ final class InitCommandTest extends TestCase
             'framework-path' => $framework,
         ]);
 
-        $result = (new InitCommand())($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(0, $result);
         self::assertSame("<?php\n\ndeclare(strict_types=1);\n", $this->workspace->read('project/app/AgentHarness.php'));
@@ -184,7 +186,7 @@ final class InitCommandTest extends TestCase
             'starter' => 'unknown',
         ]);
 
-        $result = (new InitCommand())($scope);
+        $result = $this->command()($scope);
 
         self::assertSame(1, $result);
 
@@ -247,5 +249,94 @@ final class InitCommandTest extends TestCase
     private function createFrameworkPath(): string
     {
         return $this->workspace->dir('phalanx');
+    }
+
+    private function command(): InitCommand
+    {
+        return new InitCommand($this->files);
+    }
+}
+
+final class TestProjectFiles implements ProjectFiles
+{
+    public function __construct(
+        private readonly TempWorkspace $workspace,
+    ) {
+    }
+
+    public function directoryExists(string $path): bool
+    {
+        return is_dir($path);
+    }
+
+    public function fileExists(string $path): bool
+    {
+        return file_exists($path);
+    }
+
+    public function ensureDirectory(string $path): void
+    {
+        $this->workspace->dir($this->relative($path));
+    }
+
+    public function write(string $path, string $contents): void
+    {
+        $this->workspace->file($this->relative($path), $contents);
+    }
+
+    public function copy(string $source, string $destination): void
+    {
+        $this->write($destination, $this->workspace->readPath($source));
+    }
+
+    public function readJson(string $path): mixed
+    {
+        return json_decode($this->workspace->readPath($path), true, flags: JSON_THROW_ON_ERROR);
+    }
+
+    public function writeJson(string $path, mixed $payload): void
+    {
+        $this->write($path, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
+    }
+
+    public function templateFiles(string $template, array $excludedNames): array
+    {
+        $files = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($template, \FilesystemIterator::SKIP_DOTS),
+        );
+
+        foreach ($iterator as $file) {
+            $path = $file->getPathname();
+            $relative = ltrim(substr($path, strlen(rtrim($template, '/'))), '/');
+            $segments = explode('/', str_replace('\\', '/', $relative));
+            if (array_intersect($segments, $excludedNames) !== []) {
+                continue;
+            }
+
+            if ($file->isFile()) {
+                $files[$path] = $relative;
+            }
+        }
+
+        ksort($files);
+
+        return $files;
+    }
+
+    private function relative(string $path): string
+    {
+        $root = rtrim($this->workspace->root, DIRECTORY_SEPARATOR);
+        $path = str_replace('\\', DIRECTORY_SEPARATOR, $path);
+
+        if ($path === $root) {
+            return '';
+        }
+
+        if (!str_starts_with($path, $root . DIRECTORY_SEPARATOR)) {
+            throw new RuntimeException("Path is outside temporary workspace: {$path}");
+        }
+
+        return substr($path, strlen($root) + 1);
     }
 }

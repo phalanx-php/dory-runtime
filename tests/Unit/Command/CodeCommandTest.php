@@ -55,9 +55,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app']);
         $exit = (new CodeCheckCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(0, $exit);
         self::assertStringContainsString('Code: app', $output);
@@ -77,9 +75,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app'], ['json' => true]);
         $exit = (new CodeCheckCommand($parser))($ctx);
-
-        rewind($stream);
-        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode($stream->contents(), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertSame(1, $exit);
         self::assertSame('app', $payload['root']);
@@ -103,9 +99,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app'], ['kind' => 'class', 'name' => 'Example']);
         $exit = (new CodeDeclarationsCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(0, $exit);
         self::assertStringContainsString('class App\\Example src/Example.php:3', $output);
@@ -130,9 +124,7 @@ final class CodeCommandTest extends TestCase
             ['text' => 'class', 'file' => 'src/Example.php', 'json' => true],
         );
         $exit = (new CodeTokensCommand($parser))($ctx);
-
-        rewind($stream);
-        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode($stream->contents(), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertSame(0, $exit);
         self::assertSame('Class', $payload['tokens'][0]['kind']);
@@ -158,9 +150,7 @@ final class CodeCommandTest extends TestCase
             ['app', '--kind=Variable', '--file=src/Example.php'],
         );
         $exit = (new CodeTokensCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(0, $exit);
         self::assertStringContainsString('Class "class" src/Example.php:3', $output);
@@ -186,9 +176,7 @@ final class CodeCommandTest extends TestCase
             ['kind' => 'method', 'name' => 'run', 'file' => 'src/Example.php', 'context' => 'App\\Example', 'json' => true],
         );
         $exit = (new CodeNodesCommand($parser))($ctx);
-
-        rewind($stream);
-        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode($stream->contents(), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertSame(0, $exit);
         self::assertSame('method', $payload['nodes'][0]['kind']);
@@ -216,9 +204,7 @@ final class CodeCommandTest extends TestCase
             ['kind' => 'method', 'name' => 'name', 'receiver' => '$this'],
         );
         $exit = (new CodeReferencesCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(0, $exit);
         self::assertStringContainsString(
@@ -235,9 +221,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app']);
         $exit = (new CodeNodesCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('Provide --kind, --name, --file, --context, or --all', $output);
@@ -251,9 +235,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app']);
         $exit = (new CodeReferencesCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('Provide --kind, --name, --receiver, --file, --context, or --all', $output);
@@ -267,9 +249,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app']);
         $exit = (new CodeTokensCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(1, $exit);
         self::assertStringContainsString('Provide --kind, --text, --file, or --all', $output);
@@ -283,9 +263,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app'], ['json' => true]);
         $exit = (new CodeTokensCommand($parser))($ctx);
-
-        rewind($stream);
-        $payload = json_decode((string) stream_get_contents($stream), true, flags: JSON_THROW_ON_ERROR);
+        $payload = json_decode($stream->contents(), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertSame(1, $exit);
         self::assertFalse($payload['ok']);
@@ -311,9 +289,7 @@ final class CodeCommandTest extends TestCase
 
         [$ctx, $stream] = $this->context(['root' => 'app'], ['all' => true]);
         $exit = (new CodeTokensCommand($parser))($ctx);
-
-        rewind($stream);
-        $output = stream_get_contents($stream);
+        $output = $stream->contents();
 
         self::assertSame(0, $exit);
         self::assertStringContainsString('Class "class" src/Example.php:3', $output);
@@ -322,15 +298,13 @@ final class CodeCommandTest extends TestCase
     /**
      * @param array<string, mixed> $args
      * @param array<string, mixed> $options
-     * @return array{CommandContext, resource}
+     * @return array{CommandContext, ResourceHandle}
      */
     private function context(array $args = [], array $options = []): array
     {
         $buffer = Stream::captureBuffer();
         $this->streams[] = $buffer;
-        $stream = $buffer->resource();
-
-        $output = new StreamOutput($stream, new TerminalEnvironment(isTty: false));
+        $output = new StreamOutput($buffer->resource(), new TerminalEnvironment(isTty: false));
         $inner = $this->createStub(ExecutionScope::class);
         $inner->method('service')->willReturnCallback(
             static fn (string $type) => match ($type) {
@@ -348,21 +322,19 @@ final class CodeCommandTest extends TestCase
                 new CommandConfig(),
                 'test-code-command',
             ),
-            $stream,
+            $buffer,
         ];
     }
 
     /**
      * @param list<string> $rawArgs
-     * @return array{CommandContext, resource}
+     * @return array{CommandContext, ResourceHandle}
      */
     private function argvContext(CommandConfig $config, array $rawArgs): array
     {
         $buffer = Stream::captureBuffer();
         $this->streams[] = $buffer;
-        $stream = $buffer->resource();
-
-        $output = new StreamOutput($stream, new TerminalEnvironment(isTty: false));
+        $output = new StreamOutput($buffer->resource(), new TerminalEnvironment(isTty: false));
         $inner = $this->createStub(ExecutionScope::class);
         $inner->method('service')->willReturnCallback(
             static fn (string $type) => match ($type) {
@@ -379,7 +351,7 @@ final class CodeCommandTest extends TestCase
                 $rawArgs,
                 'test-code-command-argv',
             ),
-            $stream,
+            $buffer,
         ];
     }
 
