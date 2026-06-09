@@ -21,6 +21,8 @@ class InitCommand implements Scopeable, DescribesCommand
 
     private const string STARTER_AGENT_HARNESS = 'agent-harness';
 
+    private const string PHALANX_FRAMEWORK_VERSION = '2.0.x-dev';
+
     /** @var list<string> */
     private const array EXCLUDED_TEMPLATE_NAMES = [
         '.env',
@@ -223,7 +225,7 @@ class InitCommand implements Scopeable, DescribesCommand
             'options' => [
                 'symlink' => true,
                 'versions' => [
-                    'phalanx-php/phalanx' => '0.7.x-dev',
+                    'phalanx-php/phalanx' => self::PHALANX_FRAMEWORK_VERSION,
                 ],
             ],
         ]];

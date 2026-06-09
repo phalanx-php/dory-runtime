@@ -123,7 +123,7 @@ final class InitCommandTest extends TestCase
         $composer = json_decode($this->workspace->read('project/composer.json'), true, flags: JSON_THROW_ON_ERROR);
         self::assertIsArray($composer);
         self::assertSame('../phalanx', $composer['repositories'][0]['url']);
-        self::assertSame('0.7.x-dev', $composer['repositories'][0]['options']['versions']['phalanx-php/phalanx']);
+        self::assertSame('2.0.x-dev', $composer['repositories'][0]['options']['versions']['phalanx-php/phalanx']);
 
         $output = $stream->contents();
         self::assertStringContainsString('Created Agents starter', $output);
