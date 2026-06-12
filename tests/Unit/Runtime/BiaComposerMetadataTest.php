@@ -4,37 +4,25 @@ declare(strict_types=1);
 
 namespace Phalanx\Bia\Tests\Unit\Runtime;
 
-use Phalanx\Testing\FixtureFile;
+use Phalanx\Bootstrap\BootstrapContract;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class BiaComposerMetadataTest extends TestCase
 {
     #[Test]
-    public function local_path_repository_versions_cover_required_phalanx_packages(): void
+    public function local_path_repository_versions_the_active_phalanx_package(): void
     {
         $composer = self::composer();
+        $repository = $composer['repositories'][0] ?? null;
 
-        $required = array_filter(
-            array_keys($composer['require'] ?? []),
-            static fn(string $package): bool => str_starts_with($package, 'phalanx-php/'),
-        );
-
-        $versions = $composer['repositories'][0]['options']['versions'] ?? [];
+        self::assertIsArray($repository);
+        self::assertSame(BootstrapContract::PACKAGE, self::phalanxPackage($composer));
+        self::assertSame('../../phalanx', $repository['url']);
+        self::assertTrue($repository['options']['symlink']);
+        $versions = $repository['options']['versions'] ?? [];
         self::assertIsArray($versions);
-        self::assertSame('../../phalanx/src/*', $composer['repositories'][0]['url']);
-        self::assertTrue($composer['repositories'][0]['options']['symlink']);
-
-        sort($required);
-        $versioned = array_keys($versions);
-        sort($versioned);
-
-        self::assertSame($required, $versioned);
-
-        foreach ($versions as $package => $version) {
-            self::assertIsString($package);
-            self::assertSame(self::branchAlias($composer), $version);
-        }
+        self::assertSame([BootstrapContract::PACKAGE => '2.0.x-dev'], $versions);
     }
 
     #[Test]
@@ -44,13 +32,7 @@ final class BiaComposerMetadataTest extends TestCase
 
         self::assertArrayNotHasKey('repositories', $composer);
 
-        foreach ($composer['require'] as $package => $constraint) {
-            if (!is_string($package) || !str_starts_with($package, 'phalanx-php/')) {
-                continue;
-            }
-
-            self::assertSame(self::publishConstraint($composer), $constraint, "{$package} must publish with a released package constraint.");
-        }
+        self::assertSame(self::publishConstraint($composer), $composer['require'][BootstrapContract::PACKAGE]);
     }
 
     /**
@@ -58,11 +40,7 @@ final class BiaComposerMetadataTest extends TestCase
      */
     private static function composer(): array
     {
-        $composer = json_decode(
-            FixtureFile::read(dirname(__DIR__, 3) . '/composer.json'),
-            true,
-            flags: JSON_THROW_ON_ERROR,
-        );
+        $composer = json_decode(self::read(dirname(__DIR__, 3) . '/composer.json'), true, flags: JSON_THROW_ON_ERROR);
 
         self::assertIsArray($composer);
 
@@ -108,5 +86,30 @@ final class BiaComposerMetadataTest extends TestCase
         $alias = self::branchAlias($composer);
 
         return '^' . str_replace('.x-dev', '', $alias);
+    }
+
+    /**
+     * @param array<string, mixed> $composer
+     */
+    private static function phalanxPackage(array $composer): string
+    {
+        $packages = [];
+        foreach (array_keys($composer['require'] ?? []) as $package) {
+            if (is_string($package) && str_starts_with($package, 'phalanx-php/')) {
+                $packages[] = $package;
+            }
+        }
+
+        self::assertCount(1, $packages);
+
+        return $packages[0];
+    }
+
+    private static function read(string $path): string
+    {
+        $contents = file_get_contents($path);
+        self::assertIsString($contents);
+
+        return $contents;
     }
 }

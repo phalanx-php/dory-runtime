@@ -3,135 +3,34 @@
 
 declare(strict_types=1);
 
-// Static binary mode: the binary is a raw PHP CLI with an embedded PHAR appended.
-// PHP's PHAR loader finds the archive by scanning backwards from EOF for the
-// __HALT_COMPILER() signature, so \Phar::running() returns non-empty when we are
-// executing from that embedded PHAR.
-if (extension_loaded('Phar') && \Phar::running() !== '') {
-    $pharAutoload = 'phar://' . \Phar::running() . '/vendor/autoload.php';
-    $pharFunctions = 'phar://' . \Phar::running() . '/src/functions.php';
-
-    if (is_file($pharAutoload)) {
-        if (is_file($pharFunctions) && !function_exists('bia')) {
-            require $pharFunctions;
-        }
-
-        require $pharAutoload;
-
-        $projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
-
-        $env = array_filter(
-            $_ENV + $_SERVER,
-            static fn(string $key): bool => !str_starts_with($key, 'HTTP_'),
-            ARRAY_FILTER_USE_KEY,
-        );
-
-        $context = [
-            ...$projectConfig->contextOverlay(),
-            ...$env,
-            'argv' => bia_normalized_argv($argv ?? $_SERVER['argv'] ?? []),
-        ];
-
-        $providers = [
-            new \Phalanx\Bia\Runtime\BiaServiceBundle(),
-            new \Phalanx\HttpClient\Bundle(),
-            new \Phalanx\Filesystem\FilesystemServiceBundle(),
-            new \Phalanx\Network\NetworkServiceBundle(),
-            new \Phalanx\WebSocket\Bundle(),
-        ];
-
-        bia_exit(
-            \Phalanx\Console\Console::starting($context)
-                ->providers(...$providers)
-                ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
-                ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
-                ->default('run')
-                ->run(bia_normalized_args($argv ?? $_SERVER['argv'] ?? []))
-        );
-    }
-}
+use Phalanx\Bia\Runtime\BiaCli;
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
 
 if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    fwrite(STDERR, "Bia runtime dependencies are not installed.\n");
+    exit(126);
 }
 
-if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 3) . '/phalanx/vendor/autoload.php';
-}
+require $autoload;
 
-if (!is_file($autoload)) {
-    $autoload = dirname(__DIR__, 4) . '/vendor/autoload.php';
-}
+try {
+    if (function_exists('phalanx_host_facts')) {
+        $payload = json_decode(phalanx_host_facts(), true, flags: JSON_THROW_ON_ERROR);
 
-if (!is_file($autoload)) {
-    fwrite(STDERR, "Could not find Composer autoload.php. Run 'composer install' first.\n");
-    bia_exit(1);
-}
-
-$functionsFile = dirname(__DIR__) . '/src/functions.php';
-
-if (is_file($functionsFile) && !function_exists('bia')) {
-    require $functionsFile;
-}
-
-$loader = require $autoload;
-
-$loader->addPsr4('Phalanx\\Bia\\', dirname(__DIR__) . '/src/');
-$projectConfig = \Phalanx\Bia\Runtime\BiaProjectConfig::discover(getcwd() ?: '.');
-
-$context = $_SERVER;
-if ($_ENV && !isset($context['PATH']) && !isset($context['Path'])) {
-    $context += $_ENV;
-}
-
-$providers = [
-    new \Phalanx\Bia\Runtime\BiaServiceBundle(),
-    new \Phalanx\HttpClient\Bundle(),
-    new \Phalanx\Filesystem\FilesystemServiceBundle(),
-    new \Phalanx\Network\NetworkServiceBundle(),
-    new \Phalanx\WebSocket\Bundle(),
-];
-
-bia_exit(
-    \Phalanx\Console\Console::starting([
-        ...$projectConfig->contextOverlay(),
-        ...$context,
-    ])
-        ->providers(...$providers)
-        ->commands(\Phalanx\Bia\Command\BiaCommandGroup::commands())
-        ->withErrorRenderers(new \Phalanx\Bia\Console\ScriptFaultRenderer())
-        ->default('run')
-        ->run(bia_normalized_args($_SERVER['argv'] ?? []))
-);
-
-/** @param list<string> $argv */
-function bia_normalized_argv(array $argv): array
-{
-    if (count($argv) > 1) {
-        return $argv;
-    }
-
-    return [$argv[0] ?? 'bia', 'help'];
-}
-
-/** @param list<string> $argv */
-function bia_normalized_args(array $argv): array
-{
-    $args = array_slice($argv, 1);
-
-    return $args === [] ? ['help'] : $args;
-}
-
-function bia_exit(int $code): never
-{
-    if (class_exists(\Swoole\Runtime::class, false)) {
-        try {
-            \Swoole\Runtime::enableCoroutine(false);
-        } catch (\Throwable) {
+        if (!is_array($payload)) {
+            fwrite(STDERR, "Fatal: invalid host facts payload.\n");
+            exit(126);
         }
+
+        exit(BiaCli::fromNativeFacts($payload)->run());
     }
 
-    exit($code);
+    $argv = $argv ?? $_SERVER['argv'] ?? [];
+    array_shift($argv);
+
+    exit(BiaCli::fromArgv(array_values($argv))->run());
+} catch (Throwable $error) {
+    fwrite(STDERR, $error->getMessage() . "\n");
+    exit(126);
 }

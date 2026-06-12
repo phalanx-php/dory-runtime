@@ -35,6 +35,13 @@ class BiaRuntimeReleaseComposer
         $composer = $this->localComposer();
         unset($composer['repositories']);
 
+        $constraint = $this->publishConstraint($composer);
+        if ($constraint !== null && isset($composer['require']) && is_array($composer['require'])) {
+            foreach (array_keys($this->phalanxRequires($composer)) as $package) {
+                $composer['require'][$package] = $constraint;
+            }
+        }
+
         return $composer;
     }
 

@@ -1,6 +1,6 @@
 {
     "name": "phalanx-php/bia-runtime",
-    "description": "Native scripting environment for Phalanx with supervised execution, lazy module services, and fluent orchestration",
+    "description": "Native scripting environment for the Phalanx v2 host/runtime handoff",
     "license": "MIT",
     "type": "library",
     "keywords": [
@@ -22,25 +22,7 @@
     },
     "require": {
         "php": "^8.4",
-        "phalanx-php/runtime": "^0.7",
-        "phalanx-php/mark": "^0.7",
-        "phalanx-php/console": "^0.7",
-        "phalanx-php/network": "^0.7",
-        "phalanx-php/config": "^0.7",
-        "phalanx-php/websocket": "^0.7",
-        "phalanx-php/worker": "^0.7",
-        "phalanx-php/http-client": "^0.7",
-        "phalanx-php/filesystem": "^0.7",
-        "phalanx-php/dev-server": "^0.7",
-        "phalanx-php/http": "^0.7",
-        "phalanx-php/stream": "^0.7",
-        "guzzlehttp/psr7": "^2.0",
-        "mlocati/ip-lib": "^1.22",
-        "nikic/fast-route": "^2.0",
-        "psr/http-factory": "^1.0",
-        "psr/http-message": "^2.0",
-        "symfony/runtime": "^7.0",
-        "symfony/var-dumper": "^7.0"
+        "phalanx-php/phalanx": "^2.0@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^13.0"
@@ -110,34 +92,18 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../../phalanx/src/*",
+            "url": "../../phalanx",
             "options": {
                 "symlink": true,
                 "versions": {
-                    "phalanx-php/runtime": "0.7.x-dev",
-                    "phalanx-php/mark": "0.7.x-dev",
-                    "phalanx-php/console": "0.7.x-dev",
-                    "phalanx-php/network": "0.7.x-dev",
-                    "phalanx-php/config": "0.7.x-dev",
-                    "phalanx-php/websocket": "0.7.x-dev",
-                    "phalanx-php/worker": "0.7.x-dev",
-                    "phalanx-php/http-client": "0.7.x-dev",
-                    "phalanx-php/filesystem": "0.7.x-dev",
-                    "phalanx-php/dev-server": "0.7.x-dev",
-                    "phalanx-php/http": "0.7.x-dev",
-                    "phalanx-php/stream": "0.7.x-dev"
+                    "phalanx-php/phalanx": "2.0.x-dev"
                 }
             }
         }
     ],
     "extra": {
         "branch-alias": {
-            "dev-main": "0.7.x-dev"
-        }
-    },
-    "config": {
-        "allow-plugins": {
-            "symfony/runtime": true
+            "dev-main": "2.0.x-dev"
         }
     },
     "minimum-stability": "dev",

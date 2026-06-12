@@ -63,8 +63,8 @@ class BiaRuntimeReleaseComposerCheck
             $this->errors[] = 'Local Phalanx repository must be type path.';
         }
 
-        if (($repository['url'] ?? null) !== '../../phalanx/src/*') {
-            $this->errors[] = 'Local Phalanx repository must point at ../../phalanx/src/*.';
+        if (($repository['url'] ?? null) !== '../../phalanx') {
+            $this->errors[] = 'Local Phalanx repository must point at ../../phalanx.';
         }
 
         if (($repository['options']['symlink'] ?? null) !== true) {
@@ -79,17 +79,12 @@ class BiaRuntimeReleaseComposerCheck
             return;
         }
 
-        ksort($required);
-        ksort($versions);
-
-        if (array_keys($versions) !== array_keys($required)) {
-            $this->errors[] = 'Local Phalanx path versions must exactly cover required Phalanx packages.';
+        if ($required !== ['phalanx-php/phalanx' => '^2.0@dev']) {
+            $this->errors[] = 'Bia runtime must require only phalanx-php/phalanx locally.';
         }
 
-        foreach ($versions as $package => $version) {
-            if (!is_string($package) || $version !== $branchAlias) {
-                $this->errors[] = "Local path version for {$package} must be {$branchAlias}.";
-            }
+        if ($versions !== ['phalanx-php/phalanx' => $branchAlias]) {
+            $this->errors[] = "Local path version for phalanx-php/phalanx must be {$branchAlias}.";
         }
     }
 
