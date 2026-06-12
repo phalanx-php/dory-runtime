@@ -26,7 +26,7 @@ try {
         exit(BiaCli::fromNativeFacts($payload)->run());
     }
 
-    $argv = $argv ?? $_SERVER['argv'] ?? [];
+    $argv = $argv ?? [];
     array_shift($argv);
 
     exit(BiaCli::fromArgv(array_values($argv))->run());

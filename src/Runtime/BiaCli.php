@@ -199,7 +199,7 @@ final class BiaCli
         $environment = getenv();
         $environment = is_array($environment) ? $environment : [];
 
-        foreach ($environment + $_ENV + $_SERVER as $key => $value) {
+        foreach ($environment as $key => $value) {
             if (!is_string($key) || !is_scalar($value)) {
                 continue;
             }
