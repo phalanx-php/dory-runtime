@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Phalanx\Bia\Runtime;
 
 use Phalanx\Bia\Runtime\Host\HostFacts;
+use Phalanx\Bia\Runtime\Serve\ServeCommand;
 use Phalanx\Phalanx;
 use Throwable;
 
@@ -46,6 +47,7 @@ final class BiaCli
             'contract', 'bootstrap-contract' => $this->contract(),
             'env:check' => $this->envCheck(array_slice($argv, 1)),
             'env:example' => $this->envExample(array_slice($argv, 1)),
+            'serve' => (new ServeCommand($this->facts))->run($argv[1] ?? null),
             'run' => $this->runScript($argv[1] ?? null),
             'help', '-h', '--help' => $this->help(),
             default => $this->unknown($command),
@@ -66,12 +68,14 @@ final class BiaCli
           bia contract
           bia env:check [config.php...]
           bia env:example [config.php...]
+          bia serve [app.php]
           bia run <script.php>
 
         Commands:
           contract  Print the Phalanx bootstrap contract JSON.
           env:check Replay config files and report env problems.
           env:example Print demanded env keys as .env.example lines.
+          serve     Serve the app with Bia host facts.
           run       Execute a PHP script file.
 
         TXT);

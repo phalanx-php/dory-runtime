@@ -10,23 +10,43 @@ use InvalidArgumentException;
 
 final class ServeFacts
 {
+    /** @param list<string> $trustedHeaders */
     public function __construct(
         private(set) string $listen,
+        private(set) ?string $behindProxy,
+        private(set) array $trustedHeaders,
     ) {
     }
 
     /** @param array<string, mixed> $data */
     public static function hydrate(array $data): self
     {
-        self::assertShape($data, ['listen'], 'ServeFacts');
+        self::assertShape($data, ['listen', 'behind_proxy', 'trusted_headers'], 'ServeFacts');
         if (!is_string($data['listen'])) { throw new InvalidArgumentException('ServeFacts.listen must be string.'); }
-        return new self($data['listen']);
+        if ($data['behind_proxy'] !== null && !is_string($data['behind_proxy'])) { throw new InvalidArgumentException('ServeFacts.behind_proxy must be string|null.'); }
+        return new self($data['listen'], $data['behind_proxy'], self::listOfString($data['trusted_headers'], 'ServeFacts.trusted_headers'));
     }
 
-    /** @return array{listen: string} */
+    /** @return array{listen: string, behind_proxy: ?string, trusted_headers: list<string>} */
     public function toArray(): array
     {
-        return ['listen' => $this->listen];
+        return ['listen' => $this->listen, 'behind_proxy' => $this->behindProxy, 'trusted_headers' => $this->trustedHeaders];
+    }
+
+    /** @return list<string> */
+    private static function listOfString(mixed $value, string $path): array
+    {
+        if (!is_array($value) || array_is_list($value) === false) {
+            throw new InvalidArgumentException("{$path} must be list<string>.");
+        }
+
+        foreach ($value as $item) {
+            if (!is_string($item)) {
+                throw new InvalidArgumentException("{$path} must be list<string>.");
+            }
+        }
+
+        return $value;
     }
 
     /** @param array<string, mixed> $data @param list<string> $keys */

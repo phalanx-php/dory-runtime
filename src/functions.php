@@ -19,3 +19,10 @@ if (!function_exists('dd')) {
         exit(0);
     }
 }
+
+if (!function_exists('bia_shutdown_requested')) {
+    function bia_shutdown_requested(): int
+    {
+        return 0;
+    }
+}

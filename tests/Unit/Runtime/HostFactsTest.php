@@ -26,6 +26,8 @@ final class HostFactsTest extends TestCase
         self::assertSame('128M', $facts->php->memoryLimit);
         self::assertSame(1, $facts->swoole->eventWorkers);
         self::assertSame('127.0.0.1:9000', $facts->serve?->listen);
+        self::assertSame('nginx', $facts->serve?->behindProxy);
+        self::assertSame(['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto'], $facts->serve?->trustedHeaders);
         self::assertSame(2500, $facts->bia->timeoutMs);
         self::assertSame('/tmp/bia-runtime', $facts->paths->runtimeDir);
     }
@@ -115,6 +117,8 @@ final class HostFactsTest extends TestCase
             ],
             'serve' => [
                 'listen' => '127.0.0.1:9000',
+                'behind_proxy' => 'nginx',
+                'trusted_headers' => ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto'],
             ],
             'bia' => [
                 'timeout_ms' => 2500,
